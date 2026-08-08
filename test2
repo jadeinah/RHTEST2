@@ -89,7 +89,7 @@ local function safeWaitChain(parent, timeout, ...)
 end
 
 -- ========================================================================
--- 📊 LIVE FARM TRACKER UI (MAXIMUM SIZE FOR 160x90)
+-- 📊 LIVE FARM TRACKER UI (ABSOLUTE MAXIMUM FULL SCREEN)
 -- ========================================================================
 task.spawn(function()
     local parentGui = (pcall(function() return CoreGui.Name end) and CoreGui) or PlayerGui
@@ -99,19 +99,21 @@ task.spawn(function()
     screenGui.Name = "JadeyTracker"
     screenGui.Parent = parentGui
     screenGui.DisplayOrder = 999999
-    screenGui.IgnoreGuiInset = true
+    
+    -- 💡 TRUE: Tatabunan na nito nang buo kahit yung Roblox Menu sa taas!
+    screenGui.IgnoreGuiInset = true 
     screenGui.ResetOnSpawn = false
 
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Parent = screenGui
     mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    mainFrame.BackgroundTransparency = 0.2 -- Mas madilim para umangat ang text
+    mainFrame.BackgroundTransparency = 0.1 -- Halos solid black
     
-    -- 🚀 S-A-G-A-D SA LAPAD (100% Width) at naka-base sa ibaba
-    mainFrame.AnchorPoint = Vector2.new(0.5, 1)
-    mainFrame.Position = UDim2.new(0.5, 0, 1, 0) 
-    mainFrame.Size = UDim2.new(1, 0, 0.65, 0) -- Sakop ang 65% ng screen height
+    -- 🚀 100% SAKOP ANG BUONG EMULATOR SCREEN
+    mainFrame.AnchorPoint = Vector2.new(0, 0)
+    mainFrame.Position = UDim2.new(0, 0, 0, 0) 
+    mainFrame.Size = UDim2.new(1, 0, 1, 0) 
     mainFrame.BorderSizePixel = 0
 
     local function createLabel(name, posY, height, color)
@@ -121,21 +123,20 @@ task.spawn(function()
         lbl.BackgroundTransparency = 1
         lbl.Position = UDim2.new(0.02, 0, posY, 0)
         lbl.Size = UDim2.new(0.96, 0, height, 0) 
-        lbl.Font = Enum.Font.SourceSansBold -- Matabang font para kitang-kita
+        lbl.Font = Enum.Font.SourceSansBold
         lbl.TextColor3 = color
-        lbl.TextScaled = true -- Dahil maiksi na ang words, lalaki ito nang sobra!
-        lbl.TextXAlignment = Enum.TextXAlignment.Center -- Naka-gitna para balance
+        lbl.TextScaled = true 
+        lbl.TextXAlignment = Enum.TextXAlignment.Center 
         return lbl
     end
 
-    -- 3 Linya lang, binigyan ng tig-30% height bawat isa
-    local userLabel = createLabel("User", 0.05, 0.3, Color3.fromRGB(255, 215, 0))
-    local diaLabel = createLabel("Dia", 0.35, 0.3, Color3.fromRGB(85, 255, 255))
-    local tradeLabel = createLabel("Trade", 0.65, 0.3, Color3.fromRGB(85, 255, 127))
+    -- Hinati sa 3 ang buong screen (33% height bawat isa)
+    local userLabel = createLabel("User", 0.0, 0.33, Color3.fromRGB(255, 215, 0))
+    local diaLabel = createLabel("Dia", 0.33, 0.33, Color3.fromRGB(85, 255, 255))
+    local tradeLabel = createLabel("Trade", 0.66, 0.33, Color3.fromRGB(85, 255, 127))
 
     local cachedLvlLabel, cachedDiaLabel = nil, nil
     
-    -- Kukunin lang ang unang 5 letters ng pangalan mo para di lumiit ang text
     local shortName = string.sub(LocalPlayer.Name, 1, 5) 
 
     while task.wait(1) do
@@ -150,11 +151,9 @@ task.spawn(function()
             local lvl = cachedLvlLabel and cachedLvlLabel.Text or "0"
             local dias = cachedDiaLabel and cachedDiaLabel.Text or "0"
             
-            -- PINAKAMAIKSING FORMAT PARA LUMAKI:
             userLabel.Text = shortName .. " | Lv" .. lvl
-            diaLabel.Text = "💎" .. dias
+            diaLabel.Text = "$ " .. dias
             
-            -- Alisin yung salitang "Trade: " at mga emojis para hindi lumiit
             local rawStatus = getgenv().TradeStatusText or ""
             rawStatus = string.gsub(rawStatus, "Trade: ", "")
             rawStatus = string.gsub(rawStatus, "👻 ", "")
@@ -169,7 +168,6 @@ task.spawn(function()
         end)
     end
 end)
-
 -- ========================================================================
 -- 👻 SUPER SAFE PHANTOM CLICKER (Thread Sleep Optimized)
 -- ========================================================================
