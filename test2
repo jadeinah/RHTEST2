@@ -89,7 +89,7 @@ local function safeWaitChain(parent, timeout, ...)
 end
 
 -- ========================================================================
--- 📊 LIVE FARM TRACKER UI (CACHED FOR ZERO LAG)
+-- 📊 LIVE FARM TRACKER UI (MICRO-RESOLUTION OPTIMIZED)
 -- ========================================================================
 task.spawn(function()
     local parentGui = (pcall(function() return CoreGui.Name end) and CoreGui) or PlayerGui
@@ -110,81 +110,59 @@ task.spawn(function()
     mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     mainFrame.BackgroundTransparency = 0.2
     
-    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    mainFrame.Size = UDim2.new(0.8, 0, 0.5, 0) 
+    -- Pinaliit at inayos ang pwesto para sa 160x90
+    mainFrame.AnchorPoint = Vector2.new(0, 0)
+    mainFrame.Position = UDim2.new(0.02, 0, 0.2, 0) 
+    mainFrame.Size = UDim2.new(0.6, 0, 0.6, 0) 
     mainFrame.BorderSizePixel = 0
 
     local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 8)
+    uiCorner.CornerRadius = UDim.new(0, 4)
     uiCorner.Parent = mainFrame
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Parent = mainFrame
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Position = UDim2.new(0, 0, 0.02, 0)
-    titleLabel.Size = UDim2.new(1, 0, 0.16, 0)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Text = isArtClass and "Jadey😴 Art Class" or "Jadey😴 AFK"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextScaled = true 
+    -- Tinanggal ang MinSize para pwedeng lumiit nang sobra
+    local sizeConstraint = Instance.new("UISizeConstraint")
+    sizeConstraint.MaxSize = Vector2.new(200, 120)
+    sizeConstraint.Parent = mainFrame
 
-    local userLabel = Instance.new("TextLabel")
-    userLabel.Parent = mainFrame
-    userLabel.BackgroundTransparency = 1
-    userLabel.Position = UDim2.new(0.05, 0, 0.18, 0)
-    userLabel.Size = UDim2.new(0.9, 0, 0.16, 0)
-    userLabel.Font = Enum.Font.GothamSemibold
-    userLabel.Text = "👤 " .. LocalPlayer.Name
-    userLabel.TextColor3 = Color3.fromRGB(255, 170, 0) 
-    userLabel.TextScaled = true
-    userLabel.TextXAlignment = Enum.TextXAlignment.Left
+    local function createLabel(name, posY, font, color)
+        local lbl = Instance.new("TextLabel")
+        lbl.Name = name
+        lbl.Parent = mainFrame
+        lbl.BackgroundTransparency = 1
+        lbl.Position = UDim2.new(0.05, 0, posY, 0)
+        lbl.Size = UDim2.new(0.9, 0, 0.16, 0)
+        lbl.Font = font
+        lbl.TextColor3 = color
+        lbl.TextScaled = true
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Tinanggal ang MinTextSize para mag-auto fit sa maliit na screen
+        local tConstraint = Instance.new("UITextSizeConstraint")
+        tConstraint.MaxTextSize = 14
+        tConstraint.Parent = lbl
+        return lbl
+    end
 
-    local modeLabel = Instance.new("TextLabel")
-    modeLabel.Parent = mainFrame
-    modeLabel.BackgroundTransparency = 1
-    modeLabel.Position = UDim2.new(0.05, 0, 0.34, 0)
-    modeLabel.Size = UDim2.new(0.9, 0, 0.16, 0)
-    modeLabel.Font = Enum.Font.GothamSemibold
-    modeLabel.Text = isArtClass and "🎨 Mode: Auto-Draw/Answer" or "⚖️ Mode: AFK"
-    modeLabel.TextColor3 = isArtClass and Color3.fromRGB(255, 170, 255) or Color3.fromRGB(170, 255, 127)
-    modeLabel.TextScaled = true
-    modeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    -- Pinaikling Text Labels
+    local titleLabel = createLabel("Title", 0.02, Enum.Font.GothamBold, Color3.fromRGB(255, 255, 255))
+    titleLabel.Text = isArtClass and "Art Class" or "AFK Mode"
 
-    local lvlLabel = Instance.new("TextLabel")
-    lvlLabel.Parent = mainFrame
-    lvlLabel.BackgroundTransparency = 1
-    lvlLabel.Position = UDim2.new(0.05, 0, 0.50, 0)
-    lvlLabel.Size = UDim2.new(0.9, 0, 0.16, 0)
-    lvlLabel.Font = Enum.Font.GothamSemibold
-    lvlLabel.Text = "🌟 Level: Loading..."
-    lvlLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-    lvlLabel.TextScaled = true
-    lvlLabel.TextXAlignment = Enum.TextXAlignment.Left
+    local userLabel = createLabel("User", 0.18, Enum.Font.GothamSemibold, Color3.fromRGB(255, 170, 0))
+    userLabel.Text = LocalPlayer.Name
 
-    local diaLabel = Instance.new("TextLabel")
-    diaLabel.Parent = mainFrame
-    diaLabel.BackgroundTransparency = 1
-    diaLabel.Position = UDim2.new(0.05, 0, 0.66, 0)
-    diaLabel.Size = UDim2.new(0.9, 0, 0.16, 0)
-    diaLabel.Font = Enum.Font.GothamSemibold
-    diaLabel.Text = "💎 Diamonds: Loading..."
-    diaLabel.TextColor3 = Color3.fromRGB(85, 255, 255)
-    diaLabel.TextScaled = true
-    diaLabel.TextXAlignment = Enum.TextXAlignment.Left
+    local modeLabel = createLabel("Mode", 0.34, Enum.Font.GothamSemibold, isArtClass and Color3.fromRGB(255, 170, 255) or Color3.fromRGB(170, 255, 127))
+    modeLabel.Text = isArtClass and "Auto-Draw" or "AFK"
 
-    local tradeLabel = Instance.new("TextLabel")
-    tradeLabel.Parent = mainFrame
-    tradeLabel.BackgroundTransparency = 1
-    tradeLabel.Position = UDim2.new(0.05, 0, 0.82, 0)
-    tradeLabel.Size = UDim2.new(0.9, 0, 0.16, 0)
-    tradeLabel.Font = Enum.Font.GothamBold
-    tradeLabel.Text = "💱 Trade: Checking..."
-    tradeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tradeLabel.TextScaled = true
-    tradeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    local lvlLabel = createLabel("Lvl", 0.50, Enum.Font.GothamSemibold, Color3.fromRGB(255, 215, 0))
+    lvlLabel.Text = "Lvl: ..."
 
-    -- 🚀 UI CACHING: Ini-imbak sa memory para hindi paikot-ikot maghanap ang CPU
+    local diaLabel = createLabel("Dia", 0.66, Enum.Font.GothamSemibold, Color3.fromRGB(85, 255, 255))
+    diaLabel.Text = "Dias: ..."
+
+    local tradeLabel = createLabel("Trade", 0.82, Enum.Font.GothamBold, Color3.fromRGB(200, 200, 200))
+    tradeLabel.Text = "Trade: ..."
+
     local cachedLvlLabel, cachedDiaLabel = nil, nil
 
     while task.wait(1) do
@@ -197,10 +175,10 @@ task.spawn(function()
             end
 
             if cachedLvlLabel and cachedLvlLabel:IsA("TextLabel") then
-                lvlLabel.Text = "🌟 Level: " .. (cachedLvlLabel.Text or "0")
+                lvlLabel.Text = "Lvl: " .. (cachedLvlLabel.Text or "0")
             end
             if cachedDiaLabel and cachedDiaLabel:IsA("TextLabel") then
-                diaLabel.Text = "💎 Diamonds: " .. (cachedDiaLabel.Text or "0")
+                diaLabel.Text = "Dias: " .. (cachedDiaLabel.Text or "0")
             end
             
             tradeLabel.Text = getgenv().TradeStatusText
