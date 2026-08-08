@@ -89,13 +89,11 @@ local function safeWaitChain(parent, timeout, ...)
 end
 
 -- ========================================================================
--- 📊 LIVE FARM TRACKER UI (MICRO-RESOLUTION OPTIMIZED)
+-- 📊 LIVE FARM TRACKER UI (MAXIMUM SIZE FOR 160x90)
 -- ========================================================================
 task.spawn(function()
     local parentGui = (pcall(function() return CoreGui.Name end) and CoreGui) or PlayerGui
     if parentGui:FindFirstChild("JadeyTracker") then parentGui.JadeyTracker:Destroy() end
-
-    local isArtClass = getgenv().Config.AutoArtClass == true
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "JadeyTracker"
@@ -107,63 +105,38 @@ task.spawn(function()
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Parent = screenGui
-    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    mainFrame.BackgroundTransparency = 0.2
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    mainFrame.BackgroundTransparency = 0.2 -- Mas madilim para umangat ang text
     
-    -- Pinaliit at inayos ang pwesto para sa 160x90
-    mainFrame.AnchorPoint = Vector2.new(0, 0)
-    mainFrame.Position = UDim2.new(0.02, 0, 0.2, 0) 
-    mainFrame.Size = UDim2.new(0.6, 0, 0.6, 0) 
+    -- 🚀 S-A-G-A-D SA LAPAD (100% Width) at naka-base sa ibaba
+    mainFrame.AnchorPoint = Vector2.new(0.5, 1)
+    mainFrame.Position = UDim2.new(0.5, 0, 1, 0) 
+    mainFrame.Size = UDim2.new(1, 0, 0.65, 0) -- Sakop ang 65% ng screen height
     mainFrame.BorderSizePixel = 0
 
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 4)
-    uiCorner.Parent = mainFrame
-
-    -- Tinanggal ang MinSize para pwedeng lumiit nang sobra
-    local sizeConstraint = Instance.new("UISizeConstraint")
-    sizeConstraint.MaxSize = Vector2.new(200, 120)
-    sizeConstraint.Parent = mainFrame
-
-    local function createLabel(name, posY, font, color)
+    local function createLabel(name, posY, height, color)
         local lbl = Instance.new("TextLabel")
         lbl.Name = name
         lbl.Parent = mainFrame
         lbl.BackgroundTransparency = 1
-        lbl.Position = UDim2.new(0.05, 0, posY, 0)
-        lbl.Size = UDim2.new(0.9, 0, 0.16, 0)
-        lbl.Font = font
+        lbl.Position = UDim2.new(0.02, 0, posY, 0)
+        lbl.Size = UDim2.new(0.96, 0, height, 0) 
+        lbl.Font = Enum.Font.SourceSansBold -- Matabang font para kitang-kita
         lbl.TextColor3 = color
-        lbl.TextScaled = true
-        lbl.TextXAlignment = Enum.TextXAlignment.Left
-        
-        -- Tinanggal ang MinTextSize para mag-auto fit sa maliit na screen
-        local tConstraint = Instance.new("UITextSizeConstraint")
-        tConstraint.MaxTextSize = 14
-        tConstraint.Parent = lbl
+        lbl.TextScaled = true -- Dahil maiksi na ang words, lalaki ito nang sobra!
+        lbl.TextXAlignment = Enum.TextXAlignment.Center -- Naka-gitna para balance
         return lbl
     end
 
-    -- Pinaikling Text Labels
-    local titleLabel = createLabel("Title", 0.02, Enum.Font.GothamBold, Color3.fromRGB(255, 255, 255))
-    titleLabel.Text = isArtClass and "Art Class" or "AFK Mode"
-
-    local userLabel = createLabel("User", 0.18, Enum.Font.GothamSemibold, Color3.fromRGB(255, 170, 0))
-    userLabel.Text = LocalPlayer.Name
-
-    local modeLabel = createLabel("Mode", 0.34, Enum.Font.GothamSemibold, isArtClass and Color3.fromRGB(255, 170, 255) or Color3.fromRGB(170, 255, 127))
-    modeLabel.Text = isArtClass and "Auto-Draw" or "AFK"
-
-    local lvlLabel = createLabel("Lvl", 0.50, Enum.Font.GothamSemibold, Color3.fromRGB(255, 215, 0))
-    lvlLabel.Text = "Lvl: ..."
-
-    local diaLabel = createLabel("Dia", 0.66, Enum.Font.GothamSemibold, Color3.fromRGB(85, 255, 255))
-    diaLabel.Text = "Dias: ..."
-
-    local tradeLabel = createLabel("Trade", 0.82, Enum.Font.GothamBold, Color3.fromRGB(200, 200, 200))
-    tradeLabel.Text = "Trade: ..."
+    -- 3 Linya lang, binigyan ng tig-30% height bawat isa
+    local userLabel = createLabel("User", 0.05, 0.3, Color3.fromRGB(255, 215, 0))
+    local diaLabel = createLabel("Dia", 0.35, 0.3, Color3.fromRGB(85, 255, 255))
+    local tradeLabel = createLabel("Trade", 0.65, 0.3, Color3.fromRGB(85, 255, 127))
 
     local cachedLvlLabel, cachedDiaLabel = nil, nil
+    
+    -- Kukunin lang ang unang 5 letters ng pangalan mo para di lumiit ang text
+    local shortName = string.sub(LocalPlayer.Name, 1, 5) 
 
     while task.wait(1) do
         pcall(function()
@@ -174,14 +147,22 @@ task.spawn(function()
                 cachedDiaLabel = safeFind(PlayerGui, "HUD", "Frame", "Middle", "DiamondsFrame", "DiamondAmount") 
             end
 
-            if cachedLvlLabel and cachedLvlLabel:IsA("TextLabel") then
-                lvlLabel.Text = "Lvl: " .. (cachedLvlLabel.Text or "0")
-            end
-            if cachedDiaLabel and cachedDiaLabel:IsA("TextLabel") then
-                diaLabel.Text = "Dias: " .. (cachedDiaLabel.Text or "0")
-            end
+            local lvl = cachedLvlLabel and cachedLvlLabel.Text or "0"
+            local dias = cachedDiaLabel and cachedDiaLabel.Text or "0"
             
-            tradeLabel.Text = getgenv().TradeStatusText
+            -- PINAKAMAIKSING FORMAT PARA LUMAKI:
+            userLabel.Text = shortName .. " | Lv" .. lvl
+            diaLabel.Text = "💎" .. dias
+            
+            -- Alisin yung salitang "Trade: " at mga emojis para hindi lumiit
+            local rawStatus = getgenv().TradeStatusText or ""
+            rawStatus = string.gsub(rawStatus, "Trade: ", "")
+            rawStatus = string.gsub(rawStatus, "👻 ", "")
+            rawStatus = string.gsub(rawStatus, "✅ ", "")
+            rawStatus = string.gsub(rawStatus, "⚠️ ", "")
+            rawStatus = string.gsub(rawStatus, "🔒 ", "")
+            
+            tradeLabel.Text = rawStatus
             tradeLabel.TextColor3 = getgenv().TradeStatusColor
 
             mainFrame.Visible = not getgenv().IsCaptchaActive
