@@ -206,13 +206,23 @@ task.spawn(function()
 end)
 
 -- ========================================================================
--- 👻 SUPER SAFE PHANTOM CLICKER 
+-- 👻 SUPER SAFE PHANTOM CLICKER (WITH STEALTH BAN STRIKE SYSTEM)
 -- ========================================================================
 task.spawn(function()
     task.wait(10) 
     local cachedGameLvlLabel = nil
+    local banStrikes = 0
+    local maxStrikes = 5
+    local isAccountBanned = false
 
     while true do
+        if isAccountBanned then
+            getgenv().TradeStatusText = "🚫 BANNED"
+            getgenv().TradeStatusColor = Color3.fromRGB(255, 0, 0)
+            task.wait(3600)
+            continue
+        end
+
         while getgenv().IsDrawing or getgenv().IsCaptchaActive do task.wait(1) end
         
         if not cachedGameLvlLabel or not cachedGameLvlLabel.Parent then
@@ -238,7 +248,7 @@ task.spawn(function()
                 local ignoredPlayers = {}
                 local success = false
                 
-                while not success do
+                while not success and not isAccountBanned do
                     while getgenv().IsDrawing or getgenv().IsCaptchaActive do task.wait(1) end
                     
                     local targetPlayer = nil
@@ -252,7 +262,7 @@ task.spawn(function()
                     if not targetPlayer then
                         if next(ignoredPlayers) ~= nil then
                             ignoredPlayers = {} 
-                            task.wait(3)
+                            task.wait(math.random(3, 6))
                             continue
                         else
                             getgenv().TradeStatusText = "Trade: No Players Found"
@@ -266,8 +276,8 @@ task.spawn(function()
                     local Camera = workspace.CurrentCamera
                     
                     local vp = Camera.ViewportSize
-                    local clickX = math.max(vp.X / 2, 60)
-                    local clickY = math.max(vp.Y / 2, 60)
+                    local clickX = math.max(vp.X / 2, 60) + math.random(-5, 5)
+                    local clickY = math.max(vp.Y / 2, 60) + math.random(-5, 5)
                     
                     local originalCFrame = targetRoot.CFrame
                     local oldAnchor = targetRoot.Anchored
@@ -276,10 +286,10 @@ task.spawn(function()
                         targetRoot.Anchored = true
                         targetRoot.CFrame = Camera.CFrame * CFrame.new(0, 0, -2)
                         
-                        task.wait(0.05 + math.random() * 0.02) 
+                        task.wait(0.08 + math.random() * 0.05) 
                         VirtualInputManager:SendMouseMoveEvent(clickX, clickY, game)
                         VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 1)
-                        task.wait(0.02 + math.random() * 0.01)
+                        task.wait(0.04 + math.random() * 0.02)
                         VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 1)
                     end)
                     
@@ -288,18 +298,33 @@ task.spawn(function()
                         targetRoot.Anchored = oldAnchor
                     end)
                     
-                    task.wait(1.5 + math.random() * 0.3)
+                    task.wait(2.0 + math.random() * 0.8)
                     
                     local profilePreview = safeFind(PlayerGui, "ProfilePreviewGui", "ProfilePreview")
                     local tradeBtn = profilePreview and profilePreview:FindFirstChild("Trade")
+                    local lvlLabel = profilePreview and profilePreview:FindFirstChild("Level")
                     
                     if profilePreview and profilePreview.Visible then
+                        local targetLvl = 0
+                        if lvlLabel and lvlLabel:IsA("TextLabel") then
+                            targetLvl = tonumber(string.match(lvlLabel.Text or "0", "%d+")) or 0
+                        end
+
                         if tradeBtn and tradeBtn.Visible then
                             success = true
+                            banStrikes = 0 
                             getgenv().TradeStatusText = "Trade: Unlocked"
                             getgenv().TradeStatusColor = Color3.fromRGB(85, 255, 127)
                             pcall(function() profilePreview.Visible = false end)
                         else
+                            if targetLvl >= 75 then
+                                banStrikes = banStrikes + 1
+                                if banStrikes >= maxStrikes then
+                                    isAccountBanned = true
+                                    getgenv().TradeStatusText = "🚫 BANNED"
+                                    getgenv().TradeStatusColor = Color3.fromRGB(255, 0, 0)
+                                end
+                            end
                             ignoredPlayers[targetPlayer] = true
                             pcall(function() profilePreview.Visible = false end)
                         end
