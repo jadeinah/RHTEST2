@@ -405,20 +405,83 @@ end
 task.wait(1.5)
 
 -- ========================================================================
--- 🤖 PART 2: UI NUKE
+-- 🤖 PART 2: SMART CLOSER & SAFE HIDER (REPLACES UI NUKE)
 -- ========================================================================
 task.spawn(function()
-    local TARGET_UIS = { ["DailyRewardsMain"] = true, ["WonRoll"] = true, ["Reward"] = true }
-    local function nukeElement(guiObject)
-        if TARGET_UIS[guiObject.Name] then
+    local VIM = game:GetService("VirtualInputManager")
+    local GuiService = game:GetService("GuiService")
+
+    -- 🛡️ 1. SAFE OFF-SCREEN HIDER (Para sa UIs na hindi pa alam ang button path)
+    -- Tinanggal na natin ang "WonRoll" dito dahil iki-click na natin siya nang tama
+    local SAFE_HIDE_UIS = { ["Reward"] = true }
+    
+    local function safeHideElement(guiObject)
+        if SAFE_HIDE_UIS[guiObject.Name] then
             pcall(function()
-                if guiObject:IsA("GuiObject") then guiObject.Visible = false
-                elseif guiObject:IsA("LayerCollector") then guiObject.Enabled = false end
+                if guiObject:IsA("GuiObject") then 
+                    -- Iwas ban: Itatapon natin sa labas ng screen
+                    guiObject.Position = UDim2.new(9999, 0, 9999, 0)
+                end
             end)
         end
     end
-    for _, descendant in ipairs(PlayerGui:GetDescendants()) do nukeElement(descendant) end
-    PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(nukeElement, descendant) end)
+    
+    for _, descendant in ipairs(PlayerGui:GetDescendants()) do safeHideElement(descendant) end
+    PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(safeHideElement, descendant) end)
+
+    -- 🖱️ 2. SMART AUTO-CLOSER (Human-like Clicking)
+    
+    -- Helper function para hindi paulit-ulit ang computation ng click logic
+    local function humanClickTarget(btn)
+        task.wait(math.random(5, 15) / 10) -- Human reaction time
+        
+        local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
+        local s, inset = pcall(function() return GuiService:GetGuiInset() end)
+        local y = pos.Y + (s and inset.Y or 0)
+        
+        local randomOffset = math.random(-4, 4)
+        
+        VIM:SendMouseMoveEvent(pos.X + randomOffset, y + randomOffset, game)
+        task.wait(0.1)
+        VIM:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, true, game, 1)
+        task.wait(math.random(5, 15) / 100) -- Human mouse-down delay
+        VIM:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, false, game, 1)
+    end
+
+    while task.wait(2) do
+        -- Wag gagalawin ang mouse kung may active Captcha o Drawing para walang conflict
+        if getgenv().IsCaptchaActive or getgenv().IsDrawing then continue end 
+
+        pcall(function()
+            -- 🏆 A. DAILY REWARDS AUTO-CLOSE
+            local playerLoginEvents = safeFind(PlayerGui, "PlayerLoginEvents")
+            local dailyRewards = safeFind(playerLoginEvents, "DailyRewardsMain")
+            
+            if dailyRewards and dailyRewards.Visible then
+                local closeBtn = safeFind(dailyRewards, "Close")
+                if closeBtn and closeBtn.Visible then
+                    humanClickTarget(closeBtn)
+                    vprint("✅ [Auto-Close] Daily Rewards Closed!")
+                end
+            end
+
+            -- 🎲 B. WONROLL AUTO-CLOSE (Yung idinagdag mong path)
+            local artClassUI = safeFind(PlayerGui, "ArtClass")
+            local wonRoll = safeFind(artClassUI, "WonRoll")
+            
+            if wonRoll and wonRoll.Visible then
+                -- Gamit ang nakuha mong path: WonRoll.Slide.Close.Button
+                local wonCloseBtn = safeFind(wonRoll, "Slide", "Close", "Button")
+                if wonCloseBtn and wonCloseBtn.Visible then
+                    humanClickTarget(wonCloseBtn)
+                    vprint("✅ [Auto-Close] WonRoll Closed!")
+                end
+            end
+            
+            -- Kung mahanap mo man sa susunod ang exact path ng "Reward", 
+            -- pwede mong kopyahin yung format sa itaas at ilagay dito bilang "C. REWARD AUTO-CLOSE"!
+        end)
+    end
 end)
 
 -- ========================================================================
