@@ -8,7 +8,7 @@ task.wait(3)
 -- 🚀 EXTREME CPU & RAM OPTIMIZER 
 -- ==========================================
 task.spawn(function()
-    local pcallSuccess = pcall(function()
+    pcall(function()
         if setfpscap then setfpscap(2) end -- I-lock sa 12 FPS para hindi umiyak ang CPU
         settings().Rendering.QualityLevel = 1
         settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
@@ -27,16 +27,14 @@ task.spawn(function()
             end
         end
     end)
-    if pcallSuccess then print("🚀 Extreme CPU Optimization Applied!") end
 end)
 
 -- ==========================================
 -- SILENT MODE & CLONEREF BYPASS
 -- ==========================================
-local DEBUG_MODE = false 
-
-local function vprint(...) if DEBUG_MODE then print(...) end end
-local function vwarn(...) if DEBUG_MODE then warn(...) end end
+-- 🛡️ Tinanggal ang lahat ng laman ng print/warn para 100% SILENT sa F9 Console
+local function vprint(...) end
+local function vwarn(...) end
 
 local function getService(serviceName)
     local service = game:GetService(serviceName)
@@ -361,7 +359,6 @@ if getgenv().Config.AutoCaptcha then
             if Captcha.Solving then return end
             Captcha.Solving = true
             getgenv().IsCaptchaActive = true
-            vprint("[Captcha] Solver Started")
 
             task.spawn(function()
                 while captchaVisible() do
@@ -397,7 +394,6 @@ if getgenv().Config.AutoCaptcha then
                 VirtualUser:Button2Down(Vector2.new(randX, randY))
                 task.wait(0.1)
                 VirtualUser:Button2Up(Vector2.new(randX, randY))
-                vprint("[Anti-AFK] Prevented disconnect.")
             end)
         end)
     end)
@@ -468,25 +464,19 @@ task.spawn(function()
                 local closeBtn = safeFind(dailyRewards, "Close")
                 if closeBtn and closeBtn.Visible then
                     humanClickTarget(closeBtn)
-                    vprint("✅ [Auto-Close] Daily Rewards Closed!")
                 end
             end
 
-            -- 🎲 B. WONROLL AUTO-CLOSE (Yung idinagdag mong path)
+            -- 🎲 B. WONROLL AUTO-CLOSE 
             local artClassUI = safeFind(PlayerGui, "ArtClass")
             local wonRoll = safeFind(artClassUI, "WonRoll")
             
             if wonRoll and wonRoll.Visible then
-                -- Gamit ang nakuha mong path: WonRoll.Slide.Close.Button
                 local wonCloseBtn = safeFind(wonRoll, "Slide", "Close", "Button")
                 if wonCloseBtn and wonCloseBtn.Visible then
                     humanClickTarget(wonCloseBtn)
-                    vprint("✅ [Auto-Close] WonRoll Closed!")
                 end
             end
-            
-            -- Kung mahanap mo man sa susunod ang exact path ng "Reward", 
-            -- pwede mong kopyahin yung format sa itaas at ilagay dito!
         end)
     end
 end)
@@ -607,11 +597,13 @@ if getgenv().Config.AutoArtClass then
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
 
-        -- 🛡️ BAGONG FUNCTION: Human-like Typing
+        -- 🛡️ BAGONG FUNCTION: Hardware-Level Clicking & Typing
         local function TypeAnswer(answer)
             local Players = game:GetService("Players")
             local LocalPlayer = Players.LocalPlayer
             local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+            local VIM = game:GetService("VirtualInputManager")
+            local GuiService = game:GetService("GuiService")
             
             local artClass = PlayerGui:FindFirstChild("ArtClass")
             local guessingGameTarget = artClass and artClass:FindFirstChild("GuessingGame")
@@ -620,11 +612,41 @@ if getgenv().Config.AutoArtClass then
             local guessingTextbox = textBoxContainer and textBoxContainer:FindFirstChild("GuessingTextbox")
             
             if guessingTextbox and guessingTextbox:IsA("TextBox") then
-                guessingTextbox:CaptureFocus()
-                task.wait(math.random(1, 4) / 10) 
+                -- 🖱️ 1. CLICK ANG TAMANG POSITION NG TEXTBOX
+                local absPos = guessingTextbox.AbsolutePosition
+                local absSize = guessingTextbox.AbsoluteSize
+                local clickX = absPos.X + (absSize.X / 2)
+                local clickY = absPos.Y + (absSize.Y / 2)
+                
+                local s, inset = pcall(function() return GuiService:GetGuiInset() end)
+                if s and inset then clickY = clickY + inset.Y end
+                
+                -- Piliting mag-scroll/click ang mouse doon
+                VIM:SendMouseMoveEvent(clickX, clickY, game)
+                task.wait(0.1)
+                VIM:SendMouseButtonEvent(clickX, clickY, 0, true, game, 1)
+                task.wait(0.1)
+                VIM:SendMouseButtonEvent(clickX, clickY, 0, false, game, 1)
+                
+                task.wait(0.3) -- Human delay bago mag-type
+                
+                -- Extra safety: i-force focus just in case may invisible UI na humarang sa click
+                pcall(function() guessingTextbox:CaptureFocus() end)
+                task.wait(0.1)
+                
+                -- ⌨️ 2. TYPE ANSWER
                 guessingTextbox.Text = answer
-                task.wait(math.random(1, 3) / 10)
-                guessingTextbox:ReleaseFocus(true) 
+                guessingTextbox.CursorPosition = #answer + 1 -- Ilalagay ang cursor sa dulo ng salita
+                
+                task.wait(0.3) -- Human delay bago pumindot ng Enter
+                
+                -- 🚀 3. PRESS ENTER KEY
+                VIM:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                task.wait(0.05)
+                VIM:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                
+                -- Fallback para ma-trigger ang internal script ng laro na naghihintay ng 'FocusLost'
+                pcall(function() guessingTextbox:ReleaseFocus(true) end)
             end
         end
 
@@ -759,7 +781,10 @@ if getgenv().Config.AutoArtClass then
         task.spawn(function()
             while task.wait(3) do
                 if (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
+                
+                -- 🟢 NANDITO ANG SERVER FETCH MO (Tumatakbo kada 3 segundo)
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID, Method = "GET" }) end)
+                
                 if pSuccess and response and response.StatusCode == 200 then
                     local dSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                     if dSuccess and decoded.answer and decoded.answer ~= "" then
