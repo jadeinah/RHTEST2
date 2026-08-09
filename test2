@@ -87,6 +87,26 @@ local function safeWaitChain(parent, timeout, ...)
     return current
 end
 
+-- ========================================================================
+-- 🛡️ ANTI-ESC MENU (Failsafe Auto-Closer)
+-- ========================================================================
+task.spawn(function()
+    local GuiServiceLocal = game:GetService("GuiService")
+    local VIMLocal = game:GetService("VirtualInputManager")
+    
+    while task.wait(0.5) do
+        -- Kapag na-detect na nakabukas ang Roblox Menu (yung aksidenteng napindot)
+        if GuiServiceLocal.MenuIsOpen then
+            pcall(function()
+                -- 🚀 Pipindutin ng bot ang "ESC" key para isara ang menu
+                VIMLocal:SendKeyEvent(true, Enum.KeyCode.Escape, false, game)
+                task.wait(0.1)
+                VIMLocal:SendKeyEvent(false, Enum.KeyCode.Escape, false, game)
+            end)
+            task.wait(1) -- Bigyan ng time sumara bago mag-check ulit
+        end
+    end
+end)
 
 -- ========================================================================
 -- 📊 LIVE FARM TRACKER UI (ABSOLUTE MAXIMUM FULL SCREEN)
@@ -168,6 +188,7 @@ task.spawn(function()
         end)
     end
 end)
+
 -- ========================================================================
 -- 👻 SUPER SAFE PHANTOM CLICKER (Thread Sleep Optimized)
 -- ========================================================================
@@ -329,9 +350,16 @@ if getgenv().Config.AutoCaptcha then
             if not btn then return false end
 
             pcall(function()
+                -- 🛡️ SHIELD: Kung di pa naglo-load ang posisyon (X=0, Y=0), wag pipindot para iwas Roblox Logo!
+                if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
+                
                 local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
                 local y = pos.Y + (s and inset.Y or 0)
+                
+                -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
+                if pos.X < 55 and y < 55 then return end
+                
                 VirtualInputManager:SendMouseMoveEvent(pos.X, y, game)
                 task.wait(CAPTCHA_CONFIG.MOUSEDOWN_DELAY)
                 VirtualInputManager:SendMouseButtonEvent(pos.X, y, 0, true, game, 1)
@@ -415,11 +443,17 @@ task.spawn(function()
     PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(safeHideElement, descendant) end)
 
     local function humanClickTarget(btn)
+        -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
+        if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
+        
         task.wait(math.random(5, 15) / 10) 
         
         local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         local y = pos.Y + (s and inset.Y or 0)
+        
+        -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
+        if pos.X < 55 and y < 55 then return end
         
         local randomOffset = math.random(-4, 4)
         
@@ -465,6 +499,9 @@ local function clickUI(element)
     local target = element:IsA("GuiObject") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
     
     pcall(function()
+        -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
+        if target.AbsolutePosition.X == 0 and target.AbsolutePosition.Y == 0 then return end
+        
         local VIM = game:GetService("VirtualInputManager")
         local GuiService = game:GetService("GuiService")
         
@@ -475,6 +512,9 @@ local function clickUI(element)
         
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         if s and inset then clickY = clickY + inset.Y end
+        
+        -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
+        if clickX < 55 and clickY < 55 then return end
         
         local offsetX = math.random(-3, 3)
         local offsetY = math.random(-3, 3)
@@ -572,16 +612,15 @@ if getgenv().Config.AutoArtClass then
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
 
-        -- 🛡️ BAGONG FUNCTION: Sumagot sa mismong Roblox Chat
         local function TypeAnswer(answer)
-            local TextChatService = game:GetService("TextChatService")
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local TextChatServiceLocal = game:GetService("TextChatService")
+            local ReplicatedStorageLocal = game:GetService("ReplicatedStorage")
             
             task.wait(math.random(3, 7) / 10) 
             
             pcall(function()
-                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                    local channels = TextChatService:FindFirstChild("TextChannels")
+                if TextChatServiceLocal.ChatVersion == Enum.ChatVersion.TextChatService then
+                    local channels = TextChatServiceLocal:FindFirstChild("TextChannels")
                     if channels then
                         local rbxGeneral = channels:FindFirstChild("RBXGeneral")
                         if rbxGeneral then 
@@ -589,7 +628,7 @@ if getgenv().Config.AutoArtClass then
                         end
                     end
                 else
-                    local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                    local chatEvent = ReplicatedStorageLocal:FindFirstChild("DefaultChatSystemChatEvents")
                     if chatEvent then
                         local sayMsg = chatEvent:FindFirstChild("SayMessageRequest")
                         if sayMsg then 
@@ -679,6 +718,9 @@ if getgenv().Config.AutoArtClass then
                         
                         if option1Btn and option1Btn:IsA("GuiObject") then
                             pcall(function()
+                                -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
+                                if option1Btn.AbsolutePosition.X == 0 and option1Btn.AbsolutePosition.Y == 0 then return end
+                                
                                 local absPos = option1Btn.AbsolutePosition
                                 local absSize = option1Btn.AbsoluteSize
                                 local clickX = absPos.X + (absSize.X / 2)
@@ -688,6 +730,9 @@ if getgenv().Config.AutoArtClass then
                                 if s and inset then 
                                     clickY = clickY + inset.Y 
                                 end
+                                
+                                -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
+                                if clickX < 55 and clickY < 55 then return end
                                 
                                 local offsetX = math.random(-5, 5)
                                 local offsetY = math.random(-5, 5)
