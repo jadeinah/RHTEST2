@@ -49,6 +49,7 @@ local GuiService = getService("GuiService")
 local HttpService = getService("HttpService")
 local VirtualUser = getService("VirtualUser")
 local CoreGui = getService("CoreGui")
+local TextChatService = getService("TextChatService")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 9999)
@@ -86,6 +87,7 @@ local function safeWaitChain(parent, timeout, ...)
     return current
 end
 
+
 -- ========================================================================
 -- 📊 LIVE FARM TRACKER UI (ABSOLUTE MAXIMUM FULL SCREEN)
 -- ========================================================================
@@ -98,7 +100,6 @@ task.spawn(function()
     screenGui.Parent = parentGui
     screenGui.DisplayOrder = 999999
     
-    -- 💡 TRUE: Tatabunan na nito nang buo kahit yung Roblox Menu sa taas!
     screenGui.IgnoreGuiInset = true 
     screenGui.ResetOnSpawn = false
 
@@ -106,9 +107,8 @@ task.spawn(function()
     mainFrame.Name = "MainFrame"
     mainFrame.Parent = screenGui
     mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    mainFrame.BackgroundTransparency = 0.1 -- Halos solid black
+    mainFrame.BackgroundTransparency = 0.1 
     
-    -- 🚀 100% SAKOP ANG BUONG EMULATOR SCREEN
     mainFrame.AnchorPoint = Vector2.new(0, 0)
     mainFrame.Position = UDim2.new(0, 0, 0, 0) 
     mainFrame.Size = UDim2.new(1, 0, 1, 0) 
@@ -132,13 +132,11 @@ task.spawn(function()
         return lbl
     end
 
-    -- Hinati sa 3 ang buong screen (33% height bawat isa)
     local userLabel = createLabel("User", 0.0, 0.33, Color3.fromRGB(255, 215, 0))
     local diaLabel = createLabel("Dia", 0.33, 0.33, Color3.fromRGB(85, 255, 255))
     local tradeLabel = createLabel("Trade", 0.66, 0.33, Color3.fromRGB(85, 255, 127))
 
     local cachedLvlLabel, cachedDiaLabel = nil, nil
-    
     local shortName = string.sub(LocalPlayer.Name, 1, 5) 
 
     while task.wait(1) do
@@ -175,8 +173,6 @@ end)
 -- ========================================================================
 task.spawn(function()
     task.wait(10) 
-
-    -- Cache para hindi paulit-ulit basahin sa loob ng loop
     local cachedGameLvlLabel = nil
 
     while true do
@@ -274,7 +270,6 @@ task.spawn(function()
             getgenv().TradeStatusColor = Color3.fromRGB(150, 150, 150)
         end
         
-        -- 🚀 ZERO CPU SLEEP: Ipapasa sa internal engine ng Roblox ang paghihintay ng 1 oras
         task.wait(3600)
     end
 end)
@@ -333,15 +328,6 @@ if getgenv().Config.AutoCaptcha then
             local btn = safeFind(PlayerGui, "CardCaptchaGame", "CaptchaGame", "Bottom", "Buttons", tostring(buttonNumber))
             if not btn then return false end
 
-            local primarySuccess = pcall(function()
-                if type(firesignal) == "function" then
-                    pcall(function() firesignal(btn.MouseButton1Click) end)
-                    pcall(function() firesignal(btn.Activated) end)
-                end
-            end)
-
-            if primarySuccess then return true end
-
             pcall(function()
                 local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
@@ -388,7 +374,6 @@ if getgenv().Config.AutoCaptcha then
         LocalPlayer.Idled:Connect(function()
             pcall(function()
                 VirtualUser:CaptureController()
-                -- Anti-AFK Randomizer Fix
                 local randX = math.random(100, 500)
                 local randY = math.random(100, 500)
                 VirtualUser:Button2Down(Vector2.new(randX, randY))
@@ -414,15 +399,12 @@ task.spawn(function()
     local VIM = game:GetService("VirtualInputManager")
     local GuiService = game:GetService("GuiService")
 
-    -- 🛡️ 1. SAFE OFF-SCREEN HIDER (Para sa UIs na hindi pa alam ang button path)
-    -- Tinanggal na natin ang "WonRoll" dito dahil iki-click na natin siya nang tama
     local SAFE_HIDE_UIS = { ["Reward"] = true }
     
     local function safeHideElement(guiObject)
         if SAFE_HIDE_UIS[guiObject.Name] then
             pcall(function()
                 if guiObject:IsA("GuiObject") then 
-                    -- Iwas ban: Itatapon natin sa labas ng screen
                     guiObject.Position = UDim2.new(9999, 0, 9999, 0)
                 end
             end)
@@ -432,11 +414,8 @@ task.spawn(function()
     for _, descendant in ipairs(PlayerGui:GetDescendants()) do safeHideElement(descendant) end
     PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(safeHideElement, descendant) end)
 
-    -- 🖱️ 2. SMART AUTO-CLOSER (Human-like Clicking)
-    
-    -- Helper function para hindi paulit-ulit ang computation ng click logic
     local function humanClickTarget(btn)
-        task.wait(math.random(5, 15) / 10) -- Human reaction time
+        task.wait(math.random(5, 15) / 10) 
         
         local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
@@ -447,16 +426,14 @@ task.spawn(function()
         VIM:SendMouseMoveEvent(pos.X + randomOffset, y + randomOffset, game)
         task.wait(0.1)
         VIM:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, true, game, 1)
-        task.wait(math.random(5, 15) / 100) -- Human mouse-down delay
+        task.wait(math.random(5, 15) / 100)
         VIM:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, false, game, 1)
     end
 
     while task.wait(2) do
-        -- Wag gagalawin ang mouse kung may active Captcha o Drawing para walang conflict
         if getgenv().IsCaptchaActive or getgenv().IsDrawing then continue end 
 
         pcall(function()
-            -- 🏆 A. DAILY REWARDS AUTO-CLOSE
             local playerLoginEvents = safeFind(PlayerGui, "PlayerLoginEvents")
             local dailyRewards = safeFind(playerLoginEvents, "DailyRewardsMain")
             
@@ -467,7 +444,6 @@ task.spawn(function()
                 end
             end
 
-            -- 🎲 B. WONROLL AUTO-CLOSE 
             local artClassUI = safeFind(PlayerGui, "ArtClass")
             local wonRoll = safeFind(artClassUI, "WonRoll")
             
@@ -484,7 +460,6 @@ end)
 -- ========================================================================
 -- 🌟 PART 1: AUTO-SETUP SCRIPT
 -- ========================================================================
--- 🛡️ BAGONG CLICKUI: Pinalitan ng VIM para iwas "firesignal" ban sa start ng laro
 local function clickUI(element)
     if not element then return end
     local target = element:IsA("GuiObject") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
@@ -597,57 +572,32 @@ if getgenv().Config.AutoArtClass then
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
 
-        -- 🛡️ BAGONG FUNCTION: Hardware-Level Clicking & Typing
+        -- 🛡️ BAGONG FUNCTION: Sumagot sa mismong Roblox Chat
         local function TypeAnswer(answer)
-            local Players = game:GetService("Players")
-            local LocalPlayer = Players.LocalPlayer
-            local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-            local VIM = game:GetService("VirtualInputManager")
-            local GuiService = game:GetService("GuiService")
+            local TextChatService = game:GetService("TextChatService")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
             
-            local artClass = PlayerGui:FindFirstChild("ArtClass")
-            local guessingGameTarget = artClass and artClass:FindFirstChild("GuessingGame")
-            local midGamePlayer = guessingGameTarget and guessingGameTarget:FindFirstChild("Mid-GamePlayer")
-            local textBoxContainer = midGamePlayer and midGamePlayer:FindFirstChild("TextBox")
-            local guessingTextbox = textBoxContainer and textBoxContainer:FindFirstChild("GuessingTextbox")
+            task.wait(math.random(3, 7) / 10) 
             
-            if guessingTextbox and guessingTextbox:IsA("TextBox") then
-                -- 🖱️ 1. CLICK ANG TAMANG POSITION NG TEXTBOX
-                local absPos = guessingTextbox.AbsolutePosition
-                local absSize = guessingTextbox.AbsoluteSize
-                local clickX = absPos.X + (absSize.X / 2)
-                local clickY = absPos.Y + (absSize.Y / 2)
-                
-                local s, inset = pcall(function() return GuiService:GetGuiInset() end)
-                if s and inset then clickY = clickY + inset.Y end
-                
-                -- Piliting mag-scroll/click ang mouse doon
-                VIM:SendMouseMoveEvent(clickX, clickY, game)
-                task.wait(0.1)
-                VIM:SendMouseButtonEvent(clickX, clickY, 0, true, game, 1)
-                task.wait(0.1)
-                VIM:SendMouseButtonEvent(clickX, clickY, 0, false, game, 1)
-                
-                task.wait(0.3) -- Human delay bago mag-type
-                
-                -- Extra safety: i-force focus just in case may invisible UI na humarang sa click
-                pcall(function() guessingTextbox:CaptureFocus() end)
-                task.wait(0.1)
-                
-                -- ⌨️ 2. TYPE ANSWER
-                guessingTextbox.Text = answer
-                guessingTextbox.CursorPosition = #answer + 1 -- Ilalagay ang cursor sa dulo ng salita
-                
-                task.wait(0.3) -- Human delay bago pumindot ng Enter
-                
-                -- 🚀 3. PRESS ENTER KEY
-                VIM:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                task.wait(0.05)
-                VIM:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                
-                -- Fallback para ma-trigger ang internal script ng laro na naghihintay ng 'FocusLost'
-                pcall(function() guessingTextbox:ReleaseFocus(true) end)
-            end
+            pcall(function()
+                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    local channels = TextChatService:FindFirstChild("TextChannels")
+                    if channels then
+                        local rbxGeneral = channels:FindFirstChild("RBXGeneral")
+                        if rbxGeneral then 
+                            rbxGeneral:SendAsync(answer) 
+                        end
+                    end
+                else
+                    local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                    if chatEvent then
+                        local sayMsg = chatEvent:FindFirstChild("SayMessageRequest")
+                        if sayMsg then 
+                            sayMsg:FireServer(answer, "All") 
+                        end
+                    end
+                end
+            end)
         end
 
         local function sendData(word)
@@ -658,12 +608,11 @@ if getgenv().Config.AutoArtClass then
             end)
         end
 
-        -- 🛡️ BAGONG FUNCTION: Human-like Drawing (No more straight lines)
         local function drawLineSafe(startX, startY, endX, endY)
             local safeWait = 0
             while getgenv().IsCaptchaActive and safeWait < 60 do task.wait(0.5); safeWait = safeWait + 1 end
             
-            local steps = math.random(15, 25) -- Mas madaming steps = mas mukhang natural
+            local steps = math.random(15, 25) 
             
             VirtualInputManager:SendMouseMoveEvent(startX, startY, game)
             task.wait(0.04) 
@@ -674,9 +623,9 @@ if getgenv().Config.AutoArtClass then
                 if getgenv().IsCaptchaActive then VirtualInputManager:SendMouseButtonEvent(endX, endY, 0, false, game, 1) return end
                 
                 local t = i / steps
-                local easeT = t * t * (3 - 2 * t) -- Easing function para hindi constant ang speed
+                local easeT = t * t * (3 - 2 * t) 
                 
-                local jitterX = math.random(-3, 3) -- Hand jitter
+                local jitterX = math.random(-3, 3) 
                 local jitterY = math.random(-3, 3)
                 
                 local currentX = startX + ((endX - startX) * easeT) + jitterX
@@ -726,7 +675,6 @@ if getgenv().Config.AutoArtClass then
                         while getgenv().IsCaptchaActive do task.wait(0.5) end
                         task.wait(math.random(15, 30) / 10)
                         
-                        -- 🎯 Hahanapin ang exact button gamit ang path mo
                         local option1Btn = safeFind(chooseAWord, "Option1", "BG", "ModeButton", "Button")
                         
                         if option1Btn and option1Btn:IsA("GuiObject") then
@@ -782,7 +730,6 @@ if getgenv().Config.AutoArtClass then
             while task.wait(3) do
                 if (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
                 
-                -- 🟢 NANDITO ANG SERVER FETCH MO (Tumatakbo kada 3 segundo)
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID, Method = "GET" }) end)
                 
                 if pSuccess and response and response.StatusCode == 200 then
@@ -796,7 +743,6 @@ if getgenv().Config.AutoArtClass then
                                 while getgenv().IsCaptchaActive do task.wait(0.5) end
                                 while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
                                 
-                                -- 🛡️ Updated logic: 90% chance sumagot, 10% chance mag-skip
                                 if guessingGame.Visible and not midGameArtist.Visible then
                                     local rng = math.random(1, 100)
                                     if rng <= 90 then
@@ -805,7 +751,6 @@ if getgenv().Config.AutoArtClass then
                                             lastGuessTime = tick() 
                                         end)
                                     else
-                                        -- Sinadyang HINDI sumagot para magmukhang totoong tao
                                         pcall(function()
                                             lastGuessTime = tick() 
                                         end)
