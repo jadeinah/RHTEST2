@@ -9,9 +9,8 @@ task.wait(3)
 -- ==========================================
 task.spawn(function()
     pcall(function()
-        if setfpscap then setfpscap(2) end -- I-lock sa 2 FPS
+        if setfpscap then setfpscap(5) end 
         
-        -- 🛑 1. PATAYIN ANG 3D ENGINE (Kung supported ng executor)
         pcall(function()
             if set3drenderingenabled then set3drenderingenabled(false) end
             local RunService = game:GetService("RunService")
@@ -25,19 +24,17 @@ task.spawn(function()
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
         
-        -- 🛑 2. ITAPON ANG CAMERA SA VOID (Para walang i-load ang screen)
         local camera = workspace.CurrentCamera
         if camera then
             camera.CameraType = Enum.CameraType.Scriptable
             camera.CFrame = CFrame.new(0, 999999, 0)
         end
 
-        -- 🛑 3. BURAHIN AT GAWING INVISIBLE ANG MUNDO
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Material = Enum.Material.Plastic
                 v.Reflectance = 0
-                v.Transparency = 1 -- Gawing invisible lahat ng naiwan
+                v.Transparency = 1 
             elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("MeshPart") then
                 v:Destroy()
             end
@@ -48,7 +45,6 @@ end)
 -- ==========================================
 -- SILENT MODE & CLONEREF BYPASS
 -- ==========================================
--- 🛡️ Tinanggal ang lahat ng laman ng print/warn para 100% SILENT sa F9 Console
 local function vprint(...) end
 local function vwarn(...) end
 
@@ -82,6 +78,9 @@ getgenv().IsDrawing = false
 getgenv().TradeStatusText = "Trade: Starting up..."
 getgenv().TradeStatusColor = Color3.fromRGB(200, 200, 200)
 
+getgenv().ArtStatusText = "🎨 Art: Loading..."
+getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
+
 local makeHttpRequest = request or http_request or (http and http.request) or fluxus or (syn and syn.request)
 
 local function safeFind(parent, ...)
@@ -111,21 +110,19 @@ task.spawn(function()
     local VIMLocal = game:GetService("VirtualInputManager")
     
     while task.wait(0.5) do
-        -- Kapag na-detect na nakabukas ang Roblox Menu (yung aksidenteng napindot)
         if GuiServiceLocal.MenuIsOpen then
             pcall(function()
-                -- 🚀 Pipindutin ng bot ang "ESC" key para isara ang menu
                 VIMLocal:SendKeyEvent(true, Enum.KeyCode.Escape, false, game)
                 task.wait(0.1)
                 VIMLocal:SendKeyEvent(false, Enum.KeyCode.Escape, false, game)
             end)
-            task.wait(1) -- Bigyan ng time sumara bago mag-check ulit
+            task.wait(1) 
         end
     end
 end)
 
 -- ========================================================================
--- 📊 LIVE FARM TRACKER UI (ABSOLUTE MAXIMUM FULL SCREEN)
+-- 📊 LIVE FARM TRACKER UI 
 -- ========================================================================
 task.spawn(function()
     local parentGui = (pcall(function() return CoreGui.Name end) and CoreGui) or PlayerGui
@@ -138,6 +135,7 @@ task.spawn(function()
     
     screenGui.IgnoreGuiInset = true 
     screenGui.ResetOnSpawn = false
+    pcall(function() screenGui.ScreenInsets = Enum.ScreenInsets.None end)
 
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
@@ -149,8 +147,6 @@ task.spawn(function()
     mainFrame.Position = UDim2.new(0, 0, 0, 0) 
     mainFrame.Size = UDim2.new(1, 0, 1, 0) 
     mainFrame.BorderSizePixel = 0
-    
-    -- 🛡️ BAGONG DAGDAG: Para tagusan ang clicks ng bot (Hindi haharangin ng UI)
     mainFrame.Active = false
     pcall(function() mainFrame.Interactable = false end)
 
@@ -168,9 +164,10 @@ task.spawn(function()
         return lbl
     end
 
-    local userLabel = createLabel("User", 0.0, 0.33, Color3.fromRGB(255, 215, 0))
-    local diaLabel = createLabel("Dia", 0.33, 0.33, Color3.fromRGB(85, 255, 255))
-    local tradeLabel = createLabel("Trade", 0.66, 0.33, Color3.fromRGB(85, 255, 127))
+    local userLabel = createLabel("User", 0.0, 0.25, Color3.fromRGB(255, 215, 0))
+    local diaLabel = createLabel("Dia", 0.25, 0.25, Color3.fromRGB(85, 255, 255))
+    local tradeLabel = createLabel("Trade", 0.50, 0.25, Color3.fromRGB(85, 255, 127))
+    local artLabel = createLabel("Art", 0.75, 0.25, Color3.fromRGB(255, 170, 255))
 
     local cachedLvlLabel, cachedDiaLabel = nil, nil
     local shortName = string.sub(LocalPlayer.Name, 1, 5) 
@@ -200,13 +197,16 @@ task.spawn(function()
             tradeLabel.Text = rawStatus
             tradeLabel.TextColor3 = getgenv().TradeStatusColor
 
+            artLabel.Text = getgenv().ArtStatusText or ""
+            artLabel.TextColor3 = getgenv().ArtStatusColor
+
             mainFrame.Visible = not getgenv().IsCaptchaActive
         end)
     end
 end)
 
 -- ========================================================================
--- 👻 SUPER SAFE PHANTOM CLICKER (Thread Sleep Optimized)
+-- 👻 SUPER SAFE PHANTOM CLICKER 
 -- ========================================================================
 task.spawn(function()
     task.wait(10) 
@@ -250,9 +250,15 @@ task.spawn(function()
                     end
                     
                     if not targetPlayer then
-                        getgenv().TradeStatusText = "Trade: No Players Found"
-                        getgenv().TradeStatusColor = Color3.fromRGB(255, 255, 100)
-                        break
+                        if next(ignoredPlayers) ~= nil then
+                            ignoredPlayers = {} 
+                            task.wait(3)
+                            continue
+                        else
+                            getgenv().TradeStatusText = "Trade: No Players Found"
+                            getgenv().TradeStatusColor = Color3.fromRGB(255, 255, 100)
+                            break
+                        end
                     end
                     
                     local targetChar = targetPlayer.Character
@@ -366,14 +372,12 @@ if getgenv().Config.AutoCaptcha then
             if not btn then return false end
 
             pcall(function()
-                -- 🛡️ SHIELD: Kung di pa naglo-load ang posisyon (X=0, Y=0), wag pipindot para iwas Roblox Logo!
                 if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
                 
                 local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
                 local y = pos.Y + (s and inset.Y or 0)
                 
-                -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
                 if pos.X < 55 and y < 55 then return end
                 
                 VirtualInputManager:SendMouseMoveEvent(pos.X, y, game)
@@ -437,7 +441,7 @@ end
 task.wait(1.5)
 
 -- ========================================================================
--- 🤖 PART 2: SMART CLOSER & SAFE HIDER (REPLACES UI NUKE)
+-- 🤖 PART 2: SMART CLOSER & SAFE HIDER
 -- ========================================================================
 task.spawn(function()
     local VIM = game:GetService("VirtualInputManager")
@@ -459,7 +463,6 @@ task.spawn(function()
     PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(safeHideElement, descendant) end)
 
     local function humanClickTarget(btn)
-        -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
         if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
         
         task.wait(math.random(5, 15) / 10) 
@@ -468,7 +471,6 @@ task.spawn(function()
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         local y = pos.Y + (s and inset.Y or 0)
         
-        -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
         if pos.X < 55 and y < 55 then return end
         
         local randomOffset = math.random(-4, 4)
@@ -515,7 +517,6 @@ local function clickUI(element)
     local target = element:IsA("GuiObject") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
     
     pcall(function()
-        -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
         if target.AbsolutePosition.X == 0 and target.AbsolutePosition.Y == 0 then return end
         
         local VIM = game:GetService("VirtualInputManager")
@@ -529,7 +530,6 @@ local function clickUI(element)
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         if s and inset then clickY = clickY + inset.Y end
         
-        -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
         if clickX < 55 and clickY < 55 then return end
         
         local offsetX = math.random(-3, 3)
@@ -545,7 +545,6 @@ end
 
 local safeEgirlNames = { "Luna", "Angel", "Mimi", "Yuna", "Ari", "Lily", "Misa", "Aiko", "Sora", "Kira", "Nini", "Rin", "Yuki", "Nyla", "Ava", "Bella" }
 local pfpList = { "rbxassetid://115029257457567", "rbxassetid://88815506216062" }
-
 local hairs = { "Buzzy Bunz", "Chromae's Braid", "Hibiscus Curls", "Hibiscus Waves", "Inventor's Top Bun" }
 local outfits = { "2026July1", "2026July2", "2026June1", "2026June2" }
 local faces = { "Winnie", "90s Grunge", "Boba Pearls", "Cheetah", "Glazed Donut" }
@@ -607,7 +606,7 @@ if rpNameBox then
 end
 
 -- ========================================================================
--- 🎨 ART CLASS 
+-- 🎨 ART CLASS (Smart Memory Reset Fix)
 -- ========================================================================
 if getgenv().Config.AutoArtClass then
     task.spawn(function()
@@ -623,14 +622,17 @@ if getgenv().Config.AutoArtClass then
         local artistsWordLabel = safeWaitChain(midGameArtist, 5, "ArtistsWord")
 
         local lastSentWord = ""
-        local isProcessingGuess, attemptedWords = false, {}
+        local isProcessingGuess = false
         local lastGuessTime = tick() + 10 
         
-        -- 🛑 MID-ROUND JOIN DETECTOR 🛑
-        -- Aalamin kung nag-join ang account habang may nagdodrawing na
         local isWaitingForNextRound = false
         if midGameArtist and midGameArtist.Visible then
             isWaitingForNextRound = true
+            getgenv().ArtStatusText = "⏳ Waiting Next Round"
+            getgenv().ArtStatusColor = Color3.fromRGB(255, 255, 100)
+        else
+            getgenv().ArtStatusText = "🎨 Art: Scanning..."
+            getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
         end
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
@@ -714,6 +716,10 @@ if getgenv().Config.AutoArtClass then
         local function startWritingWord(wordToDraw)
             if getgenv().IsDrawing then return end
             getgenv().IsDrawing = true
+            
+            getgenv().ArtStatusText = "🎨 Drawing..."
+            getgenv().ArtStatusColor = Color3.fromRGB(170, 85, 255)
+            
             task.spawn(function()
                 local camera = workspace.CurrentCamera
                 task.wait(math.random(25, 45) / 10) 
@@ -727,6 +733,8 @@ if getgenv().Config.AutoArtClass then
                     task.wait(math.random(1, 3) / 10) 
                 end
                 getgenv().IsDrawing = false
+                getgenv().ArtStatusText = "🎨 Art: Scanning..."
+                getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
             end)
         end
 
@@ -741,7 +749,6 @@ if getgenv().Config.AutoArtClass then
                         
                         if option1Btn and option1Btn:IsA("GuiObject") then
                             pcall(function()
-                                -- 🛡️ SHIELD: Bawal if 0,0 position (unloaded UI)
                                 if option1Btn.AbsolutePosition.X == 0 and option1Btn.AbsolutePosition.Y == 0 then return end
                                 
                                 local absPos = option1Btn.AbsolutePosition
@@ -754,7 +761,6 @@ if getgenv().Config.AutoArtClass then
                                     clickY = clickY + inset.Y 
                                 end
                                 
-                                -- 🛡️ SHIELD: Bawal pumindot sa Top-Left Area
                                 if clickX < 55 and clickY < 55 then return end
                                 
                                 local offsetX = math.random(-5, 5)
@@ -792,19 +798,22 @@ if getgenv().Config.AutoArtClass then
             midGameArtist:GetPropertyChangedSignal("Visible"):Connect(function()
                 if midGameArtist.Visible then 
                     getgenv().IsDrawing = false
-                    attemptedWords = {} 
                 else
-                    -- 🛑 Re-reset ang Mid-Round Detector pag tapos na ang round
                     if isWaitingForNextRound then
                         isWaitingForNextRound = false
+                        getgenv().ArtStatusText = "🎨 Art: Scanning..."
+                        getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
                     end
                 end
             end)
         end
 
+        -- 🟢 SMART ROUND DETECTOR LOGIC (Pumalit sa lumang "attemptedWords" bug)
         task.spawn(function()
+            local lastTargetWord = ""
+            local wordResetTimer = tick()
+
             while task.wait(3) do
-                -- 🛑 Kapag waiting pa sa next round, huwag pansinin ang server API
                 if isWaitingForNextRound or (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
                 
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID, Method = "GET" }) end)
@@ -813,29 +822,50 @@ if getgenv().Config.AutoArtClass then
                     local dSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                     if dSuccess and decoded.answer and decoded.answer ~= "" then
                         local finalAnswer = cleanWord(decoded.answer)
-                        if finalAnswer ~= "" and string.len(finalAnswer) > 1 and not attemptedWords[finalAnswer] then
-                            attemptedWords[finalAnswer] = true; isProcessingGuess = true 
-                            task.spawn(function()
-                                task.wait((math.random(20, 50) / 10) + ((math.random(15, 30) / 10) + (string.len(finalAnswer) * 0.2)))
-                                while getgenv().IsCaptchaActive do task.wait(0.5) end
-                                while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
+                        
+                        if finalAnswer ~= "" and string.len(finalAnswer) > 1 then
+                            
+                            -- 💡 FIX: Kapag bagong word (o lumipas na ang 1.5 mins / bagong round), magre-reset ang utak niya
+                            if finalAnswer ~= lastTargetWord or (tick() - wordResetTimer > 90) then
+                                lastTargetWord = finalAnswer
+                                wordResetTimer = tick()
+                                isProcessingGuess = true 
                                 
-                                if guessingGame.Visible and not midGameArtist.Visible then
-                                    local rng = math.random(1, 100)
-                                    if rng <= 90 then
-                                        pcall(function() 
-                                            TypeAnswer(finalAnswer)
-                                            lastGuessTime = tick() 
-                                        end)
-                                    else
-                                        pcall(function()
-                                            lastGuessTime = tick() 
-                                        end)
+                                task.spawn(function()
+                                    task.wait((math.random(20, 50) / 10) + ((math.random(15, 30) / 10) + (string.len(finalAnswer) * 0.2)))
+                                    while getgenv().IsCaptchaActive do task.wait(0.5) end
+                                    while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
+                                    
+                                    if guessingGame.Visible and not midGameArtist.Visible then
+                                        local rng = math.random(1, 100)
+                                        if rng <= 90 then
+                                            getgenv().ArtStatusText = "💬 Answering"
+                                            getgenv().ArtStatusColor = Color3.fromRGB(85, 255, 127)
+                                            
+                                            pcall(function() 
+                                                TypeAnswer(finalAnswer)
+                                                lastGuessTime = tick() 
+                                            end)
+                                        else
+                                            getgenv().ArtStatusText = "💤 Skipped (10%)"
+                                            getgenv().ArtStatusColor = Color3.fromRGB(255, 85, 85)
+                                            
+                                            pcall(function()
+                                                lastGuessTime = tick() 
+                                            end)
+                                        end
                                     end
-                                end
-                                
-                                isProcessingGuess = false 
-                            end)
+                                    
+                                    isProcessingGuess = false 
+                                    
+                                    -- 💡 FIX: I-reset pabalik sa "Scanning..." ang text makalipas ang 15 seconds
+                                    task.wait(15)
+                                    if getgenv().ArtStatusText == "💬 Answering" or getgenv().ArtStatusText == "💤 Skipped (10%)" then
+                                        getgenv().ArtStatusText = "🎨 Art: Scanning..."
+                                        getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
+                                    end
+                                end)
+                            end
                         end
                     end
                 end
