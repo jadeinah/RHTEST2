@@ -63,7 +63,7 @@ end
 -- ==========================================
 getgenv().IsCaptchaActive = false
 getgenv().IsDrawing = false
-getgenv().TradeStatusText = "💱 Trade: Starting up..."
+getgenv().TradeStatusText = "Trade: Starting up..."
 getgenv().TradeStatusColor = Color3.fromRGB(200, 200, 200)
 
 local makeHttpRequest = request or http_request or (http and http.request) or fluxus or (syn and syn.request)
@@ -209,7 +209,7 @@ task.spawn(function()
         end
 
         if currentLvl >= 75 then
-            getgenv().TradeStatusText = "👻 Trade: Scanning..."
+            getgenv().TradeStatusText = "Trade: Scanning..."
             getgenv().TradeStatusColor = Color3.fromRGB(85, 170, 255)
             
             local myChar = LocalPlayer.Character
@@ -234,7 +234,7 @@ task.spawn(function()
                     end
                     
                     if not targetPlayer then
-                        getgenv().TradeStatusText = "⚠️ Trade: No Players Found"
+                        getgenv().TradeStatusText = "Trade: No Players Found"
                         getgenv().TradeStatusColor = Color3.fromRGB(255, 255, 100)
                         break
                     end
@@ -274,7 +274,7 @@ task.spawn(function()
                     if profilePreview and profilePreview.Visible then
                         if tradeBtn and tradeBtn.Visible then
                             success = true
-                            getgenv().TradeStatusText = "✅ Trade: Unlocked"
+                            getgenv().TradeStatusText = "Trade: Unlocked"
                             getgenv().TradeStatusColor = Color3.fromRGB(85, 255, 127)
                             pcall(function() profilePreview.Visible = false end)
                         else
@@ -287,7 +287,7 @@ task.spawn(function()
                 end
             end
         else
-            getgenv().TradeStatusText = "🔒 Trade: Locked (< 75)"
+            getgenv().TradeStatusText = "Trade: Locked (< 75)"
             getgenv().TradeStatusColor = Color3.fromRGB(150, 150, 150)
         end
         
@@ -609,6 +609,13 @@ if getgenv().Config.AutoArtClass then
         local lastSentWord = ""
         local isProcessingGuess, attemptedWords = false, {}
         local lastGuessTime = tick() + 10 
+        
+        -- 🛑 MID-ROUND JOIN DETECTOR 🛑
+        -- Aalamin kung nag-join ang account habang may nagdodrawing na
+        local isWaitingForNextRound = false
+        if midGameArtist and midGameArtist.Visible then
+            isWaitingForNextRound = true
+        end
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
 
@@ -767,13 +774,22 @@ if getgenv().Config.AutoArtClass then
 
         if midGameArtist then
             midGameArtist:GetPropertyChangedSignal("Visible"):Connect(function()
-                if midGameArtist.Visible then getgenv().IsDrawing = false; attemptedWords = {} end
+                if midGameArtist.Visible then 
+                    getgenv().IsDrawing = false
+                    attemptedWords = {} 
+                else
+                    -- 🛑 Re-reset ang Mid-Round Detector pag tapos na ang round
+                    if isWaitingForNextRound then
+                        isWaitingForNextRound = false
+                    end
+                end
             end)
         end
 
         task.spawn(function()
             while task.wait(3) do
-                if (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
+                -- 🛑 Kapag waiting pa sa next round, huwag pansinin ang server API
+                if isWaitingForNextRound or (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
                 
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID, Method = "GET" }) end)
                 
