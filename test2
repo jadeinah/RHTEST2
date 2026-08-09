@@ -115,6 +115,10 @@ task.spawn(function()
     mainFrame.Position = UDim2.new(0, 0, 0, 0) 
     mainFrame.Size = UDim2.new(1, 0, 1, 0) 
     mainFrame.BorderSizePixel = 0
+    
+    -- 🛡️ BAGONG DAGDAG: Para tagusan ang clicks ng bot (Hindi haharangin ng UI)
+    mainFrame.Active = false
+    pcall(function() mainFrame.Interactable = false end)
 
     local function createLabel(name, posY, height, color)
         local lbl = Instance.new("TextLabel")
@@ -387,9 +391,12 @@ if getgenv().Config.AutoCaptcha then
         LocalPlayer.Idled:Connect(function()
             pcall(function()
                 VirtualUser:CaptureController()
-                VirtualUser:Button2Down(Vector2.new(0, 0))
+                -- Anti-AFK Randomizer Fix
+                local randX = math.random(100, 500)
+                local randY = math.random(100, 500)
+                VirtualUser:Button2Down(Vector2.new(randX, randY))
                 task.wait(0.1)
-                VirtualUser:Button2Up(Vector2.new(0, 0))
+                VirtualUser:Button2Up(Vector2.new(randX, randY))
                 vprint("[Anti-AFK] Prevented disconnect.")
             end)
         end)
@@ -479,7 +486,7 @@ task.spawn(function()
             end
             
             -- Kung mahanap mo man sa susunod ang exact path ng "Reward", 
-            -- pwede mong kopyahin yung format sa itaas at ilagay dito bilang "C. REWARD AUTO-CLOSE"!
+            -- pwede mong kopyahin yung format sa itaas at ilagay dito!
         end)
     end
 end)
@@ -487,13 +494,32 @@ end)
 -- ========================================================================
 -- 🌟 PART 1: AUTO-SETUP SCRIPT
 -- ========================================================================
+-- 🛡️ BAGONG CLICKUI: Pinalitan ng VIM para iwas "firesignal" ban sa start ng laro
 local function clickUI(element)
     if not element then return end
-    local target = element:IsA("GuiButton") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
-    if type(firesignal) == "function" then
-        pcall(function() firesignal(target.MouseButton1Click) end)
-        pcall(function() firesignal(target.Activated) end)
-    end
+    local target = element:IsA("GuiObject") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
+    
+    pcall(function()
+        local VIM = game:GetService("VirtualInputManager")
+        local GuiService = game:GetService("GuiService")
+        
+        local absPos = target.AbsolutePosition
+        local absSize = target.AbsoluteSize
+        local clickX = absPos.X + (absSize.X / 2)
+        local clickY = absPos.Y + (absSize.Y / 2)
+        
+        local s, inset = pcall(function() return GuiService:GetGuiInset() end)
+        if s and inset then clickY = clickY + inset.Y end
+        
+        local offsetX = math.random(-3, 3)
+        local offsetY = math.random(-3, 3)
+        
+        VIM:SendMouseMoveEvent(clickX + offsetX, clickY + offsetY, game)
+        task.wait(0.05)
+        VIM:SendMouseButtonEvent(clickX + offsetX, clickY + offsetY, 0, true, game, 1)
+        task.wait(0.05)
+        VIM:SendMouseButtonEvent(clickX + offsetX, clickY + offsetY, 0, false, game, 1)
+    end)
 end
 
 local safeEgirlNames = { "Luna", "Angel", "Mimi", "Yuna", "Ari", "Lily", "Misa", "Aiko", "Sora", "Kira", "Nini", "Rin", "Yuki", "Nyla", "Ava", "Bella" }
@@ -572,7 +598,6 @@ if getgenv().Config.AutoArtClass then
         if not guessingGame then return end
         
         local chooseAWord = safeWaitChain(guessingGame, 5, "ChooseAWord")
-        local option1Button = safeWaitChain(chooseAWord, 5, "Option1", "BG", "ModeButton", "Button")
         local midGameArtist = safeWaitChain(guessingGame, 5, "Mid-GameArtist")
         local artistsWordLabel = safeWaitChain(midGameArtist, 5, "ArtistsWord")
 
@@ -674,24 +699,39 @@ if getgenv().Config.AutoArtClass then
 
         if chooseAWord then
             chooseAWord:GetPropertyChangedSignal("Visible"):Connect(function()
-                if chooseAWord.Visible and option1Button then
+                if chooseAWord.Visible then
                     task.spawn(function()
                         while getgenv().IsCaptchaActive do task.wait(0.5) end
                         task.wait(math.random(15, 30) / 10)
                         
-                        -- 🛡️ Tinanggal ang firesignal para iwas ban
-                        pcall(function()
-                            local pos = option1Button.AbsolutePosition + (option1Button.AbsoluteSize / 2)
-                            local s, inset = pcall(function() return GuiService:GetGuiInset() end)
-                            local y = pos.Y + (s and inset.Y or 0) + 36 
-                            
-                            local randomOffset = math.random(-5, 5)
-                            VirtualInputManager:SendMouseMoveEvent(pos.X + randomOffset, y + randomOffset, game)
-                            task.wait(0.1)
-                            VirtualInputManager:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, true, game, 1)
-                            task.wait(0.1)
-                            VirtualInputManager:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, false, game, 1)
-                        end)
+                        -- 🎯 Hahanapin ang exact button gamit ang path mo
+                        local option1Btn = safeFind(chooseAWord, "Option1", "BG", "ModeButton", "Button")
+                        
+                        if option1Btn and option1Btn:IsA("GuiObject") then
+                            pcall(function()
+                                local absPos = option1Btn.AbsolutePosition
+                                local absSize = option1Btn.AbsoluteSize
+                                local clickX = absPos.X + (absSize.X / 2)
+                                local clickY = absPos.Y + (absSize.Y / 2)
+                                
+                                local s, inset = pcall(function() return GuiService:GetGuiInset() end)
+                                if s and inset then 
+                                    clickY = clickY + inset.Y 
+                                end
+                                
+                                local offsetX = math.random(-5, 5)
+                                local offsetY = math.random(-5, 5)
+                                
+                                local finalX = clickX + offsetX
+                                local finalY = clickY + offsetY
+                                
+                                VirtualInputManager:SendMouseMoveEvent(finalX, finalY, game)
+                                task.wait(0.1)
+                                VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, true, game, 1)
+                                task.wait(0.1)
+                                VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, false, game, 1)
+                            end)
+                        end
                     end)
                 end
             end)
