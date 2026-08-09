@@ -9,7 +9,7 @@ task.wait(3)
 -- ==========================================
 task.spawn(function()
     local pcallSuccess = pcall(function()
-        if setfpscap then setfpscap(12) end -- I-lock sa 12 FPS para hindi umiyak ang CPU
+        if setfpscap then setfpscap(2) end -- I-lock sa 12 FPS para hindi umiyak ang CPU
         settings().Rendering.QualityLevel = 1
         settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
         
