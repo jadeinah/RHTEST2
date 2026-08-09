@@ -5,11 +5,19 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 task.wait(3)
 
 -- ==========================================
--- 🚀 EXTREME CPU & RAM OPTIMIZER 
+-- 🚀 EXTREME CPU & RAM OPTIMIZER (AGGRESSIVE)
 -- ==========================================
 task.spawn(function()
     pcall(function()
-        if setfpscap then setfpscap(2) end -- I-lock sa 12 FPS para hindi umiyak ang CPU
+        if setfpscap then setfpscap(2) end -- I-lock sa 2 FPS
+        
+        -- 🛑 1. PATAYIN ANG 3D ENGINE (Kung supported ng executor)
+        pcall(function()
+            if set3drenderingenabled then set3drenderingenabled(false) end
+            local RunService = game:GetService("RunService")
+            RunService:Set3dRenderingEnabled(false)
+        end)
+
         settings().Rendering.QualityLevel = 1
         settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
         
@@ -17,12 +25,20 @@ task.spawn(function()
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
         
-        -- Burahin ang mabibigat na 3D textures at effects (Hindi maapektuhan ang 2D UI)
+        -- 🛑 2. ITAPON ANG CAMERA SA VOID (Para walang i-load ang screen)
+        local camera = workspace.CurrentCamera
+        if camera then
+            camera.CameraType = Enum.CameraType.Scriptable
+            camera.CFrame = CFrame.new(0, 999999, 0)
+        end
+
+        -- 🛑 3. BURAHIN AT GAWING INVISIBLE ANG MUNDO
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Material = Enum.Material.Plastic
                 v.Reflectance = 0
-            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Transparency = 1 -- Gawing invisible lahat ng naiwan
+            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("MeshPart") then
                 v:Destroy()
             end
         end
