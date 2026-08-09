@@ -348,9 +348,12 @@ end)
 if getgenv().Config.AutoCaptcha then
     task.spawn(function()
         local CAPTCHA_CONFIG = {
-            POLL_INTERVAL = 0.2, RETRY_DELAY = 1.0, CLICK_COOLDOWN = 0.8,
-            MOUSEDOWN_DELAY = 0.03, MOUSEUP_DELAY = 0.05
-        }
+    POLL_INTERVAL = math.random(15, 25) / 100,
+    RETRY_DELAY = 1.0,
+    CLICK_COOLDOWN = math.random(8, 12) / 10,
+    MOUSEDOWN_DELAY = math.random(4, 8) / 100,
+    MOUSEUP_DELAY = math.random(6, 12) / 100
+}
 
         local Captcha = { Solving = false, Cache = {}, LastClick = 0 }
         
