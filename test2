@@ -512,7 +512,6 @@ if getgenv().Config.AutoArtClass then
         local option1Button = safeWaitChain(chooseAWord, 5, "Option1", "BG", "ModeButton", "Button")
         local midGameArtist = safeWaitChain(guessingGame, 5, "Mid-GameArtist")
         local artistsWordLabel = safeWaitChain(midGameArtist, 5, "ArtistsWord")
-        -- Tinanggal na natin ang answerRemote dahil hindi na natin gagamitin ang direct FireServer
 
         local lastSentWord = ""
         local isProcessingGuess, attemptedWords = false, {}
@@ -669,12 +668,20 @@ if getgenv().Config.AutoArtClass then
                                 while getgenv().IsCaptchaActive do task.wait(0.5) end
                                 while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
                                 
-                                -- 🛡️ Updated logic para sumagot ng parang totoong tao
+                                -- 🛡️ Updated logic: 90% chance sumagot, 10% chance mag-skip
                                 if guessingGame.Visible and not midGameArtist.Visible then
-                                    pcall(function() 
-                                        TypeAnswer(finalAnswer)
-                                        lastGuessTime = tick() 
-                                    end)
+                                    local rng = math.random(1, 100)
+                                    if rng <= 90 then
+                                        pcall(function() 
+                                            TypeAnswer(finalAnswer)
+                                            lastGuessTime = tick() 
+                                        end)
+                                    else
+                                        -- Sinadyang HINDI sumagot para magmukhang totoong tao
+                                        pcall(function()
+                                            lastGuessTime = tick() 
+                                        end)
+                                    end
                                 end
                                 
                                 isProcessingGuess = false 
