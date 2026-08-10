@@ -206,7 +206,7 @@ task.spawn(function()
 end)
 
 -- ========================================================================
--- 👻 SUPER SAFE PHANTOM CLICKER (WITH STEALTH BAN STRIKE SYSTEM)
+-- 👻 SUPER SAFE PHANTOM CLICKER
 -- ========================================================================
 task.spawn(function()
     task.wait(10) 
@@ -343,17 +343,17 @@ task.spawn(function()
 end)
 
 -- ========================================================================
--- 🛡️ PART 0: AUTO-CAPTCHA
+-- 🛡️ PART 0: AUTO-CAPTCHA (WITH ANTI-BAN FAILSAFE)
 -- ========================================================================
 if getgenv().Config.AutoCaptcha then
     task.spawn(function()
         local CAPTCHA_CONFIG = {
-    POLL_INTERVAL = math.random(15, 25) / 100,
-    RETRY_DELAY = 1.0,
-    CLICK_COOLDOWN = math.random(8, 12) / 10,
-    MOUSEDOWN_DELAY = math.random(4, 8) / 100,
-    MOUSEUP_DELAY = math.random(6, 12) / 100
-}
+            POLL_INTERVAL = math.random(15, 25) / 100,
+            RETRY_DELAY = 1.0,
+            CLICK_COOLDOWN = math.random(8, 12) / 10,
+            MOUSEDOWN_DELAY = math.random(4, 8) / 100,
+            MOUSEUP_DELAY = math.random(6, 12) / 100
+        }
 
         local Captcha = { Solving = false, Cache = {}, LastClick = 0 }
         
@@ -427,9 +427,16 @@ if getgenv().Config.AutoCaptcha then
                     local asset = getTargetId()
                     if asset and (tick() - Captcha.LastClick >= CAPTCHA_CONFIG.CLICK_COOLDOWN) then
                         local button = Captcha.Cache[asset] or getButtonFromAPI(asset)
-                        if button then Captcha.Cache[asset] = button else button = tostring(math.random(1, 15)) end
-                        clickCaptchaButton(button)
-                        Captcha.LastClick = tick()
+                        
+                        if button then 
+                            Captcha.Cache[asset] = button
+                            clickCaptchaButton(button)
+                            Captcha.LastClick = tick()
+                        else 
+                            warn("⚠️ Captcha Image Not Found! Disconnecting to prevent ban...")
+                            LocalPlayer:Kick("⚠️ [ANTI-BAN FAILSAFE] Captcha image not recognized. Disconnected to prevent 5-min lockout.")
+                            return
+                        end
                     end
                     task.wait(CAPTCHA_CONFIG.RETRY_DELAY)
                 end
@@ -634,13 +641,13 @@ if rpNameBox then
 end
 
 -- ========================================================================
--- 🎨 ART CLASS (Smart Memory Reset Fix)
+-- 🎨 ART CLASS (SMART ROTATION SYNCED TO SERVER)
 -- ========================================================================
 if getgenv().Config.AutoArtClass then
     task.spawn(function()
         local WEBHOOK_URL = "https://discord/api/webhooks/1533145445805719785/BLmpU3ZkgeFx2MqBem3qG91orJCIsSWh_cPab8ePZnfvsYZV79V0Jy5hH8PuJAOpcO9m"
         local SERVER_ID = game.JobId == "" and "LocalServer" or game.JobId
-        local MY_API_URL = "https://resulting-develops-bet-troubleshooting.trycloudflare.com/api/word"
+        local MY_API_URL = "https://settlement-everyday-generic-internationally.trycloudflare.com/api/word"
 
         local guessingGame = safeWaitChain(PlayerGui, 15, "ArtClass", "GuessingGame")
         if not guessingGame then return end
@@ -692,11 +699,12 @@ if getgenv().Config.AutoArtClass then
             end)
         end
 
+        -- 📌 UPDATE: Pinapadala na ang pangalan natin para alam ng server na tayo yung nagda-drawing!
         local function sendData(word)
             if not makeHttpRequest then return end
             task.spawn(function()
-                pcall(function() makeHttpRequest({ Url = MY_API_URL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ server_id = SERVER_ID, answer = word }) }) end)
-                pcall(function() makeHttpRequest({ Url = WEBHOOK_URL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ content = "🎨 **Server:** `" .. word .. "`", username = "Art Class Bot" }) }) end)
+                pcall(function() makeHttpRequest({ Url = MY_API_URL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ server_id = SERVER_ID, answer = word, player = LocalPlayer.Name }) }) end)
+                pcall(function() makeHttpRequest({ Url = WEBHOOK_URL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ content = "🎨 **Drawer:** `" .. LocalPlayer.Name .. "` | **Word:** `" .. word .. "`", username = "Art Class Bot" }) }) end)
             end)
         end
 
@@ -836,7 +844,7 @@ if getgenv().Config.AutoArtClass then
             end)
         end
 
-        -- 🟢 SMART ROUND DETECTOR LOGIC (Pumalit sa lumang "attemptedWords" bug)
+        -- 🟢 SMART ROUND DETECTOR LOGIC (WITH ROTATING AFK SYSTEM)
         task.spawn(function()
             local lastTargetWord = ""
             local wordResetTimer = tick()
@@ -844,16 +852,16 @@ if getgenv().Config.AutoArtClass then
             while task.wait(3) do
                 if isWaitingForNextRound or (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
                 
-                local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID, Method = "GET" }) end)
+                -- 📌 UPDATE: Idinagdag ang pangalan natin sa GET request para alam ng server kung sino tayo!
+                local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID .. "&player=" .. LocalPlayer.Name, Method = "GET" }) end)
                 
                 if pSuccess and response and response.StatusCode == 200 then
                     local dSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                     if dSuccess and decoded.answer and decoded.answer ~= "" then
                         local finalAnswer = cleanWord(decoded.answer)
+                        local shouldSkip = decoded.skip -- Mula sa Python Server na utos
                         
                         if finalAnswer ~= "" and string.len(finalAnswer) > 1 then
-                            
-                            -- 💡 FIX: Kapag bagong word (o lumipas na ang 1.5 mins / bagong round), magre-reset ang utak niya
                             if finalAnswer ~= lastTargetWord or (tick() - wordResetTimer > 90) then
                                 lastTargetWord = finalAnswer
                                 wordResetTimer = tick()
@@ -865,8 +873,8 @@ if getgenv().Config.AutoArtClass then
                                     while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
                                     
                                     if guessingGame.Visible and not midGameArtist.Visible then
-                                        local rng = math.random(1, 100)
-                                        if rng <= 90 then
+                                        -- 📌 UPDATE: Ang Server na ang bahala kung sasagot ba o hindi!
+                                        if not shouldSkip then
                                             getgenv().ArtStatusText = "💬 Answering"
                                             getgenv().ArtStatusColor = Color3.fromRGB(85, 255, 127)
                                             
@@ -875,8 +883,9 @@ if getgenv().Config.AutoArtClass then
                                                 lastGuessTime = tick() 
                                             end)
                                         else
-                                            getgenv().ArtStatusText = "💤 Skipped (10%)"
-                                            getgenv().ArtStatusColor = Color3.fromRGB(255, 85, 85)
+                                            -- Kapag siya ang napiling mag AFK ngayong round
+                                            getgenv().ArtStatusText = "💤 AFK Mode"
+                                            getgenv().ArtStatusColor = Color3.fromRGB(255, 170, 0)
                                             
                                             pcall(function()
                                                 lastGuessTime = tick() 
@@ -886,9 +895,8 @@ if getgenv().Config.AutoArtClass then
                                     
                                     isProcessingGuess = false 
                                     
-                                    -- 💡 FIX: I-reset pabalik sa "Scanning..." ang text makalipas ang 15 seconds
                                     task.wait(15)
-                                    if getgenv().ArtStatusText == "💬 Answering" or getgenv().ArtStatusText == "💤 Skipped (10%)" then
+                                    if getgenv().ArtStatusText == "💬 Answering" or getgenv().ArtStatusText == "💤 AFK Mode" then
                                         getgenv().ArtStatusText = "🎨 Art: Scanning..."
                                         getgenv().ArtStatusColor = Color3.fromRGB(200, 200, 200)
                                     end
