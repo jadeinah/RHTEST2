@@ -380,7 +380,7 @@ if getgenv().Config.AutoCaptcha then
 
         local function getButtonFromAPI(assetId)
             if not makeHttpRequest then return nil end
-            local apiUrl = "https://thumbnails.roproxy.com/v1/assets?assetIds=" .. assetId .. "&returnPolicy=PlaceHolder&size=420x420&format=Webp"
+            local apiUrl = "https://thumbnails.roproxy/v1/assets?assetIds=" .. assetId .. "&returnPolicy=PlaceHolder&size=420x420&format=Webp"
             local success, response = pcall(function() return makeHttpRequest({ Url = apiUrl, Method = "GET" }) end)
             
             if success and response and response.StatusCode == 200 then
@@ -638,9 +638,9 @@ end
 -- ========================================================================
 if getgenv().Config.AutoArtClass then
     task.spawn(function()
-        local WEBHOOK_URL = "https://discord.com/api/webhooks/1533145445805719785/BLmpU3ZkgeFx2MqBem3qG91orJCIsSWh_cPab8ePZnfvsYZV79V0Jy5hH8PuJAOpcO9m"
+        local WEBHOOK_URL = "https://discord/api/webhooks/1533145445805719785/BLmpU3ZkgeFx2MqBem3qG91orJCIsSWh_cPab8ePZnfvsYZV79V0Jy5hH8PuJAOpcO9m"
         local SERVER_ID = game.JobId == "" and "LocalServer" or game.JobId
-        local MY_API_URL = "https://maritime-noble-crimes-earliest.trycloudflare.com/api/word"
+        local MY_API_URL = "https://livestock-vids-performing-hampton.trycloudflare.com/api/word"
 
         local guessingGame = safeWaitChain(PlayerGui, 15, "ArtClass", "GuessingGame")
         if not guessingGame then return end
