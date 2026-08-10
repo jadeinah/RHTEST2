@@ -380,7 +380,10 @@ if getgenv().Config.AutoCaptcha then
 
         local function getButtonFromAPI(assetId)
             if not makeHttpRequest then return nil end
-            local apiUrl = "https://thumbnails.roproxy/v1/assets?assetIds=" .. assetId .. "&returnPolicy=PlaceHolder&size=420x420&format=Webp"
+            
+            -- 📌 FIX: Idinagdag ang .com sa roproxy
+            local apiUrl = "https://thumbnails.roproxy.com/v1/assets?assetIds=" .. assetId .. "&returnPolicy=PlaceHolder&size=420x420&format=Webp"
+            
             local success, response = pcall(function() return makeHttpRequest({ Url = apiUrl, Method = "GET" }) end)
             
             if success and response and response.StatusCode == 200 then
@@ -391,7 +394,11 @@ if getgenv().Config.AutoCaptcha then
                         if string.find(imageUrl, savedHash) then return buttonNum end
                     end
                 end
+            else
+                -- 📌 DEBUG: Para malaman mo sa F9 console kung nag-fail ang RoProxy website
+                warn("⚠️ [CAPTCHA API ERROR] Hindi ma-access ang RoProxy. Status Code:", response and response.StatusCode or "Request Failed")
             end
+            
             return nil
         end
 
