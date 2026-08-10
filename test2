@@ -640,7 +640,7 @@ if getgenv().Config.AutoArtClass then
     task.spawn(function()
         local WEBHOOK_URL = "https://discord/api/webhooks/1533145445805719785/BLmpU3ZkgeFx2MqBem3qG91orJCIsSWh_cPab8ePZnfvsYZV79V0Jy5hH8PuJAOpcO9m"
         local SERVER_ID = game.JobId == "" and "LocalServer" or game.JobId
-        local MY_API_URL = "https://livestock-vids-performing-hampton.trycloudflare.com/api/word"
+        local MY_API_URL = "https://settlement-everyday-generic-internationally.trycloudflare.com/api/word"
 
         local guessingGame = safeWaitChain(PlayerGui, 15, "ArtClass", "GuessingGame")
         if not guessingGame then return end
