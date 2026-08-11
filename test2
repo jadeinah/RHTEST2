@@ -10,7 +10,7 @@ task.wait(3)
 task.spawn(function()
     pcall(function()
         if setfpscap then setfpscap(5) end 
-        
+
         pcall(function()
             if set3drenderingenabled then set3drenderingenabled(false) end
             local RunService = game:GetService("RunService")
@@ -19,11 +19,11 @@ task.spawn(function()
 
         settings().Rendering.QualityLevel = 1
         settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
-        
+
         local Lighting = game:GetService("Lighting")
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
-        
+
         local camera = workspace.CurrentCamera
         if camera then
             camera.CameraType = Enum.CameraType.Scriptable
@@ -108,7 +108,7 @@ end
 task.spawn(function()
     local GuiServiceLocal = game:GetService("GuiService")
     local VIMLocal = game:GetService("VirtualInputManager")
-    
+
     while task.wait(0.5) do
         if GuiServiceLocal.MenuIsOpen then
             pcall(function()
@@ -132,7 +132,7 @@ task.spawn(function()
     screenGui.Name = "JadeyTracker"
     screenGui.Parent = parentGui
     screenGui.DisplayOrder = 999999
-    
+
     screenGui.IgnoreGuiInset = true 
     screenGui.ResetOnSpawn = false
     pcall(function() screenGui.ScreenInsets = Enum.ScreenInsets.None end)
@@ -142,7 +142,7 @@ task.spawn(function()
     mainFrame.Parent = screenGui
     mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     mainFrame.BackgroundTransparency = 0.1 
-    
+
     mainFrame.AnchorPoint = Vector2.new(0, 0)
     mainFrame.Position = UDim2.new(0, 0, 0, 0) 
     mainFrame.Size = UDim2.new(1, 0, 1, 0) 
@@ -183,17 +183,17 @@ task.spawn(function()
 
             local lvl = cachedLvlLabel and cachedLvlLabel.Text or "0"
             local dias = cachedDiaLabel and cachedDiaLabel.Text or "0"
-            
+
             userLabel.Text = shortName .. " | Lv" .. lvl
             diaLabel.Text = "$ " .. dias
-            
+
             local rawStatus = getgenv().TradeStatusText or ""
             rawStatus = string.gsub(rawStatus, "Trade: ", "")
             rawStatus = string.gsub(rawStatus, "👻 ", "")
             rawStatus = string.gsub(rawStatus, "✅ ", "")
             rawStatus = string.gsub(rawStatus, "⚠️ ", "")
             rawStatus = string.gsub(rawStatus, "🔒 ", "")
-            
+
             tradeLabel.Text = rawStatus
             tradeLabel.TextColor3 = getgenv().TradeStatusColor
 
@@ -224,11 +224,11 @@ task.spawn(function()
         end
 
         while getgenv().IsDrawing or getgenv().IsCaptchaActive do task.wait(1) end
-        
+
         if not cachedGameLvlLabel or not cachedGameLvlLabel.Parent then
             cachedGameLvlLabel = safeFind(PlayerGui, "HUD", "Frame", "XPStuff", "Level")
         end
-        
+
         local currentLvl = 0
         if cachedGameLvlLabel and cachedGameLvlLabel:IsA("TextLabel") then
             currentLvl = tonumber(string.match(cachedGameLvlLabel.Text or "0", "%d+")) or 0
@@ -237,20 +237,20 @@ task.spawn(function()
         if currentLvl >= 75 then
             getgenv().TradeStatusText = "Trade: Scanning..."
             getgenv().TradeStatusColor = Color3.fromRGB(85, 170, 255)
-            
+
             local myChar = LocalPlayer.Character
             local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
             local myHumanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
-            
+
             if myRoot then
                 if myHumanoid then pcall(function() myHumanoid:UnequipTools() end) end
-                
+
                 local ignoredPlayers = {}
                 local success = false
-                
+
                 while not success and not isAccountBanned do
                     while getgenv().IsDrawing or getgenv().IsCaptchaActive do task.wait(1) end
-                    
+
                     local targetPlayer = nil
                     for _, p in ipairs(Players:GetPlayers()) do
                         if p ~= LocalPlayer and not ignoredPlayers[p] and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -258,7 +258,7 @@ task.spawn(function()
                             break
                         end
                     end
-                    
+
                     if not targetPlayer then
                         if next(ignoredPlayers) ~= nil then
                             ignoredPlayers = {} 
@@ -270,40 +270,40 @@ task.spawn(function()
                             break
                         end
                     end
-                    
+
                     local targetChar = targetPlayer.Character
                     local targetRoot = targetChar.HumanoidRootPart
                     local Camera = workspace.CurrentCamera
-                    
+
                     local vp = Camera.ViewportSize
                     local clickX = math.max(vp.X / 2, 60) + math.random(-5, 5)
                     local clickY = math.max(vp.Y / 2, 60) + math.random(-5, 5)
-                    
+
                     local originalCFrame = targetRoot.CFrame
                     local oldAnchor = targetRoot.Anchored
-                    
+
                     pcall(function()
                         targetRoot.Anchored = true
                         targetRoot.CFrame = Camera.CFrame * CFrame.new(0, 0, -2)
-                        
+
                         task.wait(0.08 + math.random() * 0.05) 
                         VirtualInputManager:SendMouseMoveEvent(clickX, clickY, game)
                         VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 1)
                         task.wait(0.04 + math.random() * 0.02)
                         VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 1)
                     end)
-                    
+
                     pcall(function()
                         targetRoot.CFrame = originalCFrame
                         targetRoot.Anchored = oldAnchor
                     end)
-                    
+
                     task.wait(2.0 + math.random() * 0.8)
-                    
+
                     local profilePreview = safeFind(PlayerGui, "ProfilePreviewGui", "ProfilePreview")
                     local tradeBtn = profilePreview and profilePreview:FindFirstChild("Trade")
                     local lvlLabel = profilePreview and profilePreview:FindFirstChild("Level")
-                    
+
                     if profilePreview and profilePreview.Visible then
                         local targetLvl = 0
                         if lvlLabel and lvlLabel:IsA("TextLabel") then
@@ -337,7 +337,7 @@ task.spawn(function()
             getgenv().TradeStatusText = "Trade: Locked (< 75)"
             getgenv().TradeStatusColor = Color3.fromRGB(150, 150, 150)
         end
-        
+
         task.wait(3600)
     end
 end)
@@ -356,7 +356,7 @@ if getgenv().Config.AutoCaptcha then
         }
 
         local Captcha = { Solving = false, Cache = {}, LastClick = 0 }
-        
+
         local BUTTON_HASHES = {
             ["40d02d582d76f54881f5f000c9a3712d"] = "1", ["3da8772a1380df0ea9d6e29e584d0dfa"] = "2",
             ["2ca84bc6e12650e6a29b371030041c71"] = "3", ["5abb9a3e809ddf2abec6bad6c30b9357"] = "4",
@@ -380,12 +380,12 @@ if getgenv().Config.AutoCaptcha then
 
         local function getButtonFromAPI(assetId)
             if not makeHttpRequest then return nil end
-            
+
             -- 📌 FIX: Idinagdag ang .com sa roproxy
             local apiUrl = "https://thumbnails.roproxy.com/v1/assets?assetIds=" .. assetId .. "&returnPolicy=PlaceHolder&size=420x420&format=Webp"
-            
+
             local success, response = pcall(function() return makeHttpRequest({ Url = apiUrl, Method = "GET" }) end)
-            
+
             if success and response and response.StatusCode == 200 then
                 local dataSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                 if dataSuccess and decoded.data and #decoded.data > 0 then
@@ -398,7 +398,7 @@ if getgenv().Config.AutoCaptcha then
                 -- 📌 DEBUG: Para malaman mo sa F9 console kung nag-fail ang RoProxy website
                 warn("⚠️ [CAPTCHA API ERROR] Hindi ma-access ang RoProxy. Status Code:", response and response.StatusCode or "Request Failed")
             end
-            
+
             return nil
         end
 
@@ -408,13 +408,13 @@ if getgenv().Config.AutoCaptcha then
 
             pcall(function()
                 if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
-                
+
                 local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
                 local y = pos.Y + (s and inset.Y or 0)
-                
+
                 if pos.X < 55 and y < 55 then return end
-                
+
                 VirtualInputManager:SendMouseMoveEvent(pos.X, y, game)
                 task.wait(CAPTCHA_CONFIG.MOUSEDOWN_DELAY)
                 VirtualInputManager:SendMouseButtonEvent(pos.X, y, 0, true, game, 1)
@@ -434,7 +434,7 @@ if getgenv().Config.AutoCaptcha then
                     local asset = getTargetId()
                     if asset and (tick() - Captcha.LastClick >= CAPTCHA_CONFIG.CLICK_COOLDOWN) then
                         local button = Captcha.Cache[asset] or getButtonFromAPI(asset)
-                        
+
                         if button then 
                             Captcha.Cache[asset] = button
                             clickCaptchaButton(button)
@@ -490,7 +490,7 @@ task.spawn(function()
     local GuiService = game:GetService("GuiService")
 
     local SAFE_HIDE_UIS = { ["Reward"] = true }
-    
+
     local function safeHideElement(guiObject)
         if SAFE_HIDE_UIS[guiObject.Name] then
             pcall(function()
@@ -500,23 +500,23 @@ task.spawn(function()
             end)
         end
     end
-    
+
     for _, descendant in ipairs(PlayerGui:GetDescendants()) do safeHideElement(descendant) end
     PlayerGui.DescendantAdded:Connect(function(descendant) task.defer(safeHideElement, descendant) end)
 
     local function humanClickTarget(btn)
         if btn.AbsolutePosition.X == 0 and btn.AbsolutePosition.Y == 0 then return end
-        
+
         task.wait(math.random(5, 15) / 10) 
-        
+
         local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         local y = pos.Y + (s and inset.Y or 0)
-        
+
         if pos.X < 55 and y < 55 then return end
-        
+
         local randomOffset = math.random(-4, 4)
-        
+
         VIM:SendMouseMoveEvent(pos.X + randomOffset, y + randomOffset, game)
         task.wait(0.1)
         VIM:SendMouseButtonEvent(pos.X + randomOffset, y + randomOffset, 0, true, game, 1)
@@ -530,7 +530,7 @@ task.spawn(function()
         pcall(function()
             local playerLoginEvents = safeFind(PlayerGui, "PlayerLoginEvents")
             local dailyRewards = safeFind(playerLoginEvents, "DailyRewardsMain")
-            
+
             if dailyRewards and dailyRewards.Visible then
                 local closeBtn = safeFind(dailyRewards, "Close")
                 if closeBtn and closeBtn.Visible then
@@ -540,7 +540,7 @@ task.spawn(function()
 
             local artClassUI = safeFind(PlayerGui, "ArtClass")
             local wonRoll = safeFind(artClassUI, "WonRoll")
-            
+
             if wonRoll and wonRoll.Visible then
                 local wonCloseBtn = safeFind(wonRoll, "Slide", "Close", "Button")
                 if wonCloseBtn and wonCloseBtn.Visible then
@@ -557,26 +557,26 @@ end)
 local function clickUI(element)
     if not element then return end
     local target = element:IsA("GuiObject") and element or element:FindFirstChildWhichIsA("GuiButton", true) or element
-    
+
     pcall(function()
         if target.AbsolutePosition.X == 0 and target.AbsolutePosition.Y == 0 then return end
-        
+
         local VIM = game:GetService("VirtualInputManager")
         local GuiService = game:GetService("GuiService")
-        
+
         local absPos = target.AbsolutePosition
         local absSize = target.AbsoluteSize
         local clickX = absPos.X + (absSize.X / 2)
         local clickY = absPos.Y + (absSize.Y / 2)
-        
+
         local s, inset = pcall(function() return GuiService:GetGuiInset() end)
         if s and inset then clickY = clickY + inset.Y end
-        
+
         if clickX < 55 and clickY < 55 then return end
-        
+
         local offsetX = math.random(-3, 3)
         local offsetY = math.random(-3, 3)
-        
+
         VIM:SendMouseMoveEvent(clickX + offsetX, clickY + offsetY, game)
         task.wait(0.05)
         VIM:SendMouseButtonEvent(clickX + offsetX, clickY + offsetY, 0, true, game, 1)
@@ -603,11 +603,11 @@ if rpNameBox then
 
         local dressUpBtn = safeWaitChain(PlayerGui, 5, "HUD", "Frame", "DressUp", "Button")
         local MainUI = safeWaitChain(PlayerGui, 5, "CharacterCreation", "Main")
-        
+
         if dressUpBtn and MainUI then
             clickUI(dressUpBtn)
             task.wait(1.5)
-            
+
             pcall(function()
                 if not MainUI.Visible then MainUI.Visible = true end
                 if MainUI:FindFirstChild("FirstSelection") then MainUI.FirstSelection.Visible = true end
@@ -658,7 +658,7 @@ if getgenv().Config.AutoArtClass then
 
         local guessingGame = safeWaitChain(PlayerGui, 15, "ArtClass", "GuessingGame")
         if not guessingGame then return end
-        
+
         local chooseAWord = safeWaitChain(guessingGame, 5, "ChooseAWord")
         local midGameArtist = safeWaitChain(guessingGame, 5, "Mid-GameArtist")
         local artistsWordLabel = safeWaitChain(midGameArtist, 5, "ArtistsWord")
@@ -666,7 +666,7 @@ if getgenv().Config.AutoArtClass then
         local lastSentWord = ""
         local isProcessingGuess = false
         local lastGuessTime = tick() + 10 
-        
+
         local isWaitingForNextRound = false
         if midGameArtist and midGameArtist.Visible then
             isWaitingForNextRound = true
@@ -696,10 +696,10 @@ if getgenv().Config.AutoArtClass then
         local function TypeAnswer(answer)
             local TextChatServiceLocal = game:GetService("TextChatService")
             local ReplicatedStorageLocal = game:GetService("ReplicatedStorage")
-            
+
             -- Variable typing delay base sa haba ng salita
             task.wait((math.random(3, 7) / 10) + (string.len(answer) * 0.05)) 
-            
+
             pcall(function()
                 if TextChatServiceLocal.ChatVersion == Enum.ChatVersion.TextChatService then
                     local channels = TextChatServiceLocal:FindFirstChild("TextChannels")
@@ -732,30 +732,30 @@ if getgenv().Config.AutoArtClass then
         local function drawLineSafe(startX, startY, endX, endY)
             local safeWait = 0
             while getgenv().IsCaptchaActive and safeWait < 60 do task.wait(0.5); safeWait = safeWait + 1 end
-            
+
             local steps = math.random(15, 25) 
-            
+
             VirtualInputManager:SendMouseMoveEvent(startX, startY, game)
             task.wait(0.04) 
             VirtualInputManager:SendMouseButtonEvent(startX, startY, 0, true, game, 1)
             task.wait(0.02)
-            
+
             for i = 1, steps do
                 if getgenv().IsCaptchaActive then VirtualInputManager:SendMouseButtonEvent(endX, endY, 0, false, game, 1) return end
-                
+
                 local t = i / steps
                 local easeT = t * t * (3 - 2 * t) 
-                
+
                 local jitterX = math.random(-3, 3) 
                 local jitterY = math.random(-3, 3)
-                
+
                 local currentX = startX + ((endX - startX) * easeT) + jitterX
                 local currentY = startY + ((endY - startY) * easeT) + jitterY
-                
+
                 VirtualInputManager:SendMouseMoveEvent(currentX, currentY, game)
                 task.wait(math.random(1, 3) / 100) 
             end
-            
+
             VirtualInputManager:SendMouseButtonEvent(endX, endY, 0, false, game, 1)
             task.wait(math.random(5, 15) / 100) 
         end
@@ -773,10 +773,10 @@ if getgenv().Config.AutoArtClass then
         local function startWritingWord(wordToDraw)
             if getgenv().IsDrawing then return end
             getgenv().IsDrawing = true
-            
+
             getgenv().ArtStatusText = "🎨 Drawing..."
             getgenv().ArtStatusColor = Color3.fromRGB(170, 85, 255)
-            
+
             task.spawn(function()
                 local camera = workspace.CurrentCamera
                 task.wait(math.random(25, 45) / 10) 
@@ -801,29 +801,29 @@ if getgenv().Config.AutoArtClass then
                     task.spawn(function()
                         while getgenv().IsCaptchaActive do task.wait(0.5) end
                         task.wait(math.random(15, 30) / 10)
-                        
+
                         local option1Btn = safeFind(chooseAWord, "Option1", "BG", "ModeButton", "Button")
-                        
+
                         if option1Btn and option1Btn:IsA("GuiObject") then
                             pcall(function()
                                 if option1Btn.AbsolutePosition.X == 0 and option1Btn.AbsolutePosition.Y == 0 then return end
-                                
+
                                 local absPos = option1Btn.AbsolutePosition
                                 local absSize = option1Btn.AbsoluteSize
                                 local clickX = absPos.X + (absSize.X / 2)
                                 local clickY = absPos.Y + (absSize.Y / 2)
-                                
+
                                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
                                 if s and inset then clickY = clickY + inset.Y end
-                                
+
                                 if clickX < 55 and clickY < 55 then return end
-                                
+
                                 local offsetX = math.random(-5, 5)
                                 local offsetY = math.random(-5, 5)
-                                
+
                                 local finalX = clickX + offsetX
                                 local finalY = clickY + offsetY
-                                
+
                                 VirtualInputManager:SendMouseMoveEvent(finalX, finalY, game)
                                 task.wait(0.1)
                                 VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, true, game, 1)
@@ -870,31 +870,31 @@ if getgenv().Config.AutoArtClass then
 
             while task.wait(3) do
                 if isWaitingForNextRound or (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
-                
+
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID .. "&player=" .. LocalPlayer.Name, Method = "GET" }) end)
-                
+
                 if pSuccess and response and response.StatusCode == 200 then
                     local dSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                     if dSuccess and decoded.answer and decoded.answer ~= "" then
                         local finalAnswer = cleanWord(decoded.answer)
                         local shouldSkip = decoded.skip
-                        
+
                         if finalAnswer ~= "" and string.len(finalAnswer) > 1 then
                             if finalAnswer ~= lastTargetWord or (tick() - wordResetTimer > 90) then
                                 lastTargetWord = finalAnswer
                                 wordResetTimer = tick()
                                 isProcessingGuess = true 
-                                
+
                                 task.spawn(function()
                                     task.wait((math.random(20, 50) / 10) + ((math.random(15, 30) / 10) + (string.len(finalAnswer) * 0.2)))
                                     while getgenv().IsCaptchaActive do task.wait(0.5) end
                                     while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
-                                    
+
                                     if guessingGame.Visible and not midGameArtist.Visible then
                                         if not shouldSkip then
                                             getgenv().ArtStatusText = "💬 Answering"
                                             getgenv().ArtStatusColor = Color3.fromRGB(85, 255, 127)
-                                            
+
                                             pcall(function() 
                                                 -- 🟢 HUMANIZATION 1: 15% Chance na maging "lutang" o matagal mag-isip (4-8 sec delay)
                                                 if math.random(1, 100) <= 15 then 
@@ -916,15 +916,15 @@ if getgenv().Config.AutoArtClass then
                                         else
                                             getgenv().ArtStatusText = "💤 AFK Mode"
                                             getgenv().ArtStatusColor = Color3.fromRGB(255, 170, 0)
-                                            
+
                                             pcall(function()
                                                 lastGuessTime = tick() 
                                             end)
                                         end
                                     end
-                                    
+
                                     isProcessingGuess = false 
-                                    
+
                                     task.wait(15)
                                     if getgenv().ArtStatusText == "💬 Answering" or getgenv().ArtStatusText == "💤 AFK Mode" then
                                         getgenv().ArtStatusText = "🎨 Art: Scanning..."
@@ -939,4 +939,3 @@ if getgenv().Config.AutoArtClass then
         end)
     end)
 end
-
