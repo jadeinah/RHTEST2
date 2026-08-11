@@ -648,7 +648,7 @@ if rpNameBox then
 end
 
 -- ========================================================================
--- 🎨 ART CLASS (SMART ROTATION SYNCED TO SERVER)
+-- 🎨 ART CLASS (SMART ROTATION W/ HUMANIZATION)
 -- ========================================================================
 if getgenv().Config.AutoArtClass then
     task.spawn(function()
@@ -679,11 +679,26 @@ if getgenv().Config.AutoArtClass then
 
         local function cleanWord(str) return string.match(string.gsub(string.gsub(str, "Your Drawing Subject:", ""), "[\n\r]", ""), "^%s*(.-)%s*$") end
 
+        -- 🟢 BAGONG HUMANIZATION: TYPO GENERATOR
+        local function createTypo(word)
+            if string.len(word) < 4 then return word end
+            local typoType = math.random(1, 3)
+            local pos = math.random(2, string.len(word) - 1)
+            if typoType == 1 then -- Swap letters (Hal. Apple -> Aplpe)
+                return string.sub(word, 1, pos-1) .. string.sub(word, pos+1, pos+1) .. string.sub(word, pos, pos) .. string.sub(word, pos+2)
+            elseif typoType == 2 then -- Double letter (Hal. Apple -> Appple)
+                return string.sub(word, 1, pos) .. string.sub(word, pos, pos) .. string.sub(word, pos+1)
+            else -- Miss a letter (Hal. Apple -> Aple)
+                return string.sub(word, 1, pos-1) .. string.sub(word, pos+1)
+            end
+        end
+
         local function TypeAnswer(answer)
             local TextChatServiceLocal = game:GetService("TextChatService")
             local ReplicatedStorageLocal = game:GetService("ReplicatedStorage")
             
-            task.wait(math.random(3, 7) / 10) 
+            -- Variable typing delay base sa haba ng salita
+            task.wait((math.random(3, 7) / 10) + (string.len(answer) * 0.05)) 
             
             pcall(function()
                 if TextChatServiceLocal.ChatVersion == Enum.ChatVersion.TextChatService then
@@ -706,7 +721,6 @@ if getgenv().Config.AutoArtClass then
             end)
         end
 
-        -- 📌 UPDATE: Pinapadala na ang pangalan natin para alam ng server na tayo yung nagda-drawing!
         local function sendData(word)
             if not makeHttpRequest then return end
             task.spawn(function()
@@ -800,9 +814,7 @@ if getgenv().Config.AutoArtClass then
                                 local clickY = absPos.Y + (absSize.Y / 2)
                                 
                                 local s, inset = pcall(function() return GuiService:GetGuiInset() end)
-                                if s and inset then 
-                                    clickY = clickY + inset.Y 
-                                end
+                                if s and inset then clickY = clickY + inset.Y end
                                 
                                 if clickX < 55 and clickY < 55 then return end
                                 
@@ -851,7 +863,7 @@ if getgenv().Config.AutoArtClass then
             end)
         end
 
-        -- 🟢 SMART ROUND DETECTOR LOGIC (WITH ROTATING AFK SYSTEM)
+        -- 🟢 SMART ROUND DETECTOR LOGIC
         task.spawn(function()
             local lastTargetWord = ""
             local wordResetTimer = tick()
@@ -859,14 +871,13 @@ if getgenv().Config.AutoArtClass then
             while task.wait(3) do
                 if isWaitingForNextRound or (midGameArtist and midGameArtist.Visible) or isProcessingGuess or not makeHttpRequest then continue end
                 
-                -- 📌 UPDATE: Idinagdag ang pangalan natin sa GET request para alam ng server kung sino tayo!
                 local pSuccess, response = pcall(function() return makeHttpRequest({ Url = MY_API_URL .. "?server_id=" .. SERVER_ID .. "&player=" .. LocalPlayer.Name, Method = "GET" }) end)
                 
                 if pSuccess and response and response.StatusCode == 200 then
                     local dSuccess, decoded = pcall(function() return HttpService:JSONDecode(response.Body) end)
                     if dSuccess and decoded.answer and decoded.answer ~= "" then
                         local finalAnswer = cleanWord(decoded.answer)
-                        local shouldSkip = decoded.skip -- Mula sa Python Server na utos
+                        local shouldSkip = decoded.skip
                         
                         if finalAnswer ~= "" and string.len(finalAnswer) > 1 then
                             if finalAnswer ~= lastTargetWord or (tick() - wordResetTimer > 90) then
@@ -880,17 +891,29 @@ if getgenv().Config.AutoArtClass then
                                     while (tick() - lastGuessTime) < math.random(14, 18) do task.wait(0.5) end
                                     
                                     if guessingGame.Visible and not midGameArtist.Visible then
-                                        -- 📌 UPDATE: Ang Server na ang bahala kung sasagot ba o hindi!
                                         if not shouldSkip then
                                             getgenv().ArtStatusText = "💬 Answering"
                                             getgenv().ArtStatusColor = Color3.fromRGB(85, 255, 127)
                                             
                                             pcall(function() 
+                                                -- 🟢 HUMANIZATION 1: 15% Chance na maging "lutang" o matagal mag-isip (4-8 sec delay)
+                                                if math.random(1, 100) <= 15 then 
+                                                    task.wait(math.random(40, 80) / 10) 
+                                                end
+
+                                                -- 🟢 HUMANIZATION 2: 25% Chance na magkamali ng spelling bago itama
+                                                if math.random(1, 100) <= 25 then
+                                                    local typoWord = createTypo(finalAnswer)
+                                                    if typoWord ~= finalAnswer then
+                                                        TypeAnswer(typoWord)
+                                                        task.wait(math.random(15, 30) / 10) -- Magugulat siya, tapos ita-type yung tama pagkalipas ng ilang segundo
+                                                    end
+                                                end
+
                                                 TypeAnswer(finalAnswer)
                                                 lastGuessTime = tick() 
                                             end)
                                         else
-                                            -- Kapag siya ang napiling mag AFK ngayong round
                                             getgenv().ArtStatusText = "💤 AFK Mode"
                                             getgenv().ArtStatusColor = Color3.fromRGB(255, 170, 0)
                                             
