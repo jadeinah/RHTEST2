@@ -940,37 +940,3 @@ if getgenv().Config.AutoArtClass then
     end)
 end
 
--- ========================================================================
--- 💎 AUTO DIAMOND REPORTER (100% SAFE - SENT TO PYTHON SERVER)
--- ========================================================================
-task.spawn(function()
-    local SERVER_ID = game.JobId == "" and "LocalServer" or game.JobId
-    local REPORT_API_URL = "https://resulting-develops-bet-troubleshooting.trycloudflare.com/api/diamonds"
-    local cachedDiaLabel = nil
-
-    while task.wait(120) do -- Mag-uupdate ng diamonds sa Python Server kada 2 minuto
-        pcall(function()
-            if not cachedDiaLabel or not cachedDiaLabel.Parent then
-                cachedDiaLabel = safeFind(PlayerGui, "HUD", "Frame", "Middle", "DiamondsFrame", "DiamondAmount")
-            end
-
-            local currentDiamonds = "0"
-            if cachedDiaLabel and cachedDiaLabel:IsA("TextLabel") then
-                currentDiamonds = cachedDiaLabel.Text
-            end
-
-            if makeHttpRequest then
-                makeHttpRequest({
-                    Url = REPORT_API_URL,
-                    Method = "POST",
-                    Headers = { ["Content-Type"] = "application/json" },
-                    Body = HttpService:JSONEncode({
-                        server_id = SERVER_ID,
-                        player = LocalPlayer.Name,
-                        diamonds = currentDiamonds
-                    })
-                })
-            end
-        end)
-    end
-end)
