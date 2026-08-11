@@ -901,15 +901,6 @@ if getgenv().Config.AutoArtClass then
                                                     task.wait(math.random(40, 80) / 10) 
                                                 end
 
-                                                -- 🟢 HUMANIZATION 2: 25% Chance na magkamali ng spelling bago itama
-                                                if math.random(1, 100) <= 25 then
-                                                    local typoWord = createTypo(finalAnswer)
-                                                    if typoWord ~= finalAnswer then
-                                                        TypeAnswer(typoWord)
-                                                        task.wait(math.random(15, 30) / 10) -- Magugulat siya, tapos ita-type yung tama pagkalipas ng ilang segundo
-                                                    end
-                                                end
-
                                                 TypeAnswer(finalAnswer)
                                                 lastGuessTime = tick() 
                                             end)
